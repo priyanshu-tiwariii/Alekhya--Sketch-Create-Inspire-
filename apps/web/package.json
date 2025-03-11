@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000 --turbopack",
+    "dev": "kill-port 3000 && next dev --port 3000 --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint --max-warnings 0",
@@ -12,9 +12,12 @@
   },
   "dependencies": {
     "@repo/ui": "*",
+    "axios": "^1.8.2",
     "next": "^15.2.1",
+    "next-auth": "^4.24.11",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-toastify": "^11.0.5"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^15.2.1",
