@@ -3,6 +3,12 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import axios from "axios";
 
+
+const TEMP_EMAIL_DOMAINS = [
+  "mailinator.com", "tempmail.com", "10minutemail.com", "guerrillamail.com",
+  "trashmail.com", "disposablemail.com", "fakeinbox.com", "yopmail.com"
+];
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -20,10 +26,19 @@ export const authOptions: NextAuthOptions = {
       if (!profile || !account) return false;
 
       try {
-        console.log("Profile:", profile);
-        console.log("Account:", account);
 
         const profilePhoto = 'picture' in profile ? profile.picture : (profile as any).avatar_url;
+        if (account.provider === "google" && !(profile as any)?.email_verified) {
+          return false;
+        }
+
+        const emailDomain = (profile as any)?.email.split("@")[1].toLowerCase();
+
+      // Block temp email domains
+      if (TEMP_EMAIL_DOMAINS.includes(emailDomain)) {
+        console.log("Blocked sign-in attempt from temp email:", (profile as any)?.email);
+        return false;
+      }
 
         const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/`, {    
           email: profile.email,
@@ -31,9 +46,6 @@ export const authOptions: NextAuthOptions = {
           profilePhoto,  
           provider: account.provider,
         });
-        
-        console.log("Sign-in response:", res);
-        console.log("Response:", res.data);
         return res.data.success ? true : false;
       } catch (error) {
         console.error("Sign-in error:", error);
