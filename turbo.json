@@ -2,7 +2,6 @@
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
   "tasks": {
-    
       "db:generate": {
         "cache": false
       },
@@ -27,6 +26,7 @@
     },
     "dev": {
       "dependsOn": ["^db:generate"],
+      "env": ["NEXT_PUBLIC_API_URL" , "GOOGLE_CLIENT_ID ","GOOGLE_CLIENT_SECRET","GITHUB_CLIENT_ID","GITHUB_CLIENT_SECRET"],
       "cache": false,
       "persistent": true
     }
