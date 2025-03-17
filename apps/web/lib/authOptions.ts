@@ -40,7 +40,9 @@ export const authOptions: NextAuthOptions = {
         return false;
       }
 
-        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/`, {    
+        console.log("Profile", profile);
+        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/`, {  
+          id  :profile.sub || profile?.id,  
           email: profile.email,
           name: profile.name,
           profilePhoto,  
@@ -55,6 +57,7 @@ export const authOptions: NextAuthOptions = {
 
     async jwt({ token, user }) {
       if (user) token.id = user.id;
+      console.log("JWT token", token);
       return token;
     },
 
@@ -62,6 +65,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
       }
+      console.log("Session", session);
       return session;
     },
   },
