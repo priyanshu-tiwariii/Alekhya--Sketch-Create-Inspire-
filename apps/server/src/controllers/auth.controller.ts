@@ -6,7 +6,6 @@ import apiResponse from "../helpers/apiResponse";
 
 export const authController = asyncHandler(async (req: any, res: any) => {
   let {id,email, name, profilePhoto, provider } = req.body;
-  console.log("Data", req.body);
 
   if (!email || !name || !profilePhoto || !provider) {
     throw new apiError(400, "Please provide all fields");
@@ -41,8 +40,6 @@ export const authController = asyncHandler(async (req: any, res: any) => {
   if (!newUser) {
     throw new apiError(500, "User not created");
   }
-  
-  console.log("User", newUser || user);
   return res.status(201).json(
    new apiResponse(newUser || user, 201, "User created successfully", true)
   );
