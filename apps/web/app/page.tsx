@@ -1,18 +1,28 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import LoginButton from "../components/LoginButton";
+import { useSession,getSession} from "next-auth/react";
 import Navbar from "../components/NavBar";
 
-export default function Page() {
-  const { data: session } = useSession();
+
+
+declare module "next-auth" {
+  interface Session {
+    accessToken?: string;
+  }
+}
+
+const HomePage = () => {
+  const { data: session } = useSession(); 
+
+  
 
   return (
     <div>
-      {/* <h1>NextAuth + Express.js</h1> */}
-      <Navbar/>
-      
+      <Navbar />
       {session && <p>User ID: {session.user?.id}</p>}
+     
     </div>
   );
-}
+};
+
+export default HomePage;

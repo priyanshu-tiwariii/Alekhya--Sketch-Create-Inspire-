@@ -4,7 +4,7 @@ import "../globals.css"
 import "@repo/ui/styles.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import SessionProvider from "../components/SessionProvider";
+import SessionProvider from "../Providers/SessionProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 

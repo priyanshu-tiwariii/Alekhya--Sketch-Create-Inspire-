@@ -1,11 +1,12 @@
 import { withAuth } from "next-auth/middleware";
+import { NextResponse } from "next/server";
 
 export default withAuth({
   pages: {
-    signIn: "/login", 
+    signIn: "/",
   },
 });
 
 export const config = {
-    matcher: ["/dashboard", "/profile"], // Protect only these routes
-  };
+  matcher: ["/dashboard/:path*", "/profile/:path*"], 
+};

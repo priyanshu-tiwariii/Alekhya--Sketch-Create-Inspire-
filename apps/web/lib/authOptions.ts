@@ -1,13 +1,36 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth, { Account, NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import axios from "axios";
+import { AUTH_URL } from "./apiEndPoints";
 
+export interface customUser {
+  id : string | null;
+  sub?: string | null
+  email?: string | null;
+  name?: string | null;
+  image?: string | null;
+  provider?: string | null;
+  token?: string | null;
+}
 
 const TEMP_EMAIL_DOMAINS = [
   "mailinator.com", "tempmail.com", "10minutemail.com", "guerrillamail.com",
   "trashmail.com", "disposablemail.com", "fakeinbox.com", "yopmail.com"
 ];
+
+// Validate environment variables
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  throw new Error("Google client ID or secret is not defined");
+}
+
+if (!process.env.GITHUB_CLIENT_ID || !process.env.GITHUB_CLIENT_SECRET) {
+  throw new Error("GitHub client ID or secret is not defined");
+}
+
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error("NEXTAUTH_SECRET is not defined");
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -22,55 +45,64 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    async signIn({ profile, account }) {
-      if (!profile || !account) return false;
+    async signIn({ user, account }: { user: customUser; account: Account | null }) {
+      if (!user || !account) return false;
 
       try {
+        const profilePhoto = user.image || (user as any)?.avatar_url || "default_image_url";
 
-        const profilePhoto = 'picture' in profile ? profile.picture : (profile as any).avatar_url;
-        if (account.provider === "google" && !(profile as any)?.email_verified) {
+        
+        
+
+        // Block temp email domains
+        const emailDomain = user.email?.split("@")[1]?.toLowerCase();
+        if (!emailDomain || TEMP_EMAIL_DOMAINS.includes(emailDomain)) {
+          console.log("Blocked sign-in attempt from temp email:", user.email);
           return false;
         }
-
-        const emailDomain = (profile as any)?.email.split("@")[1].toLowerCase();
-
-      // Block temp email domains
-      if (TEMP_EMAIL_DOMAINS.includes(emailDomain)) {
-        console.log("Blocked sign-in attempt from temp email:", (profile as any)?.email);
-        return false;
-      }
-
-        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/`, {  
-          id  :profile.sub || profile?.id,  
-          email: profile.email,
-          name: profile.name,
-          profilePhoto,  
-          provider: account.provider,
+              
+        const res = await axios.post(AUTH_URL, {
+          id:user.id || (user as any)?.sub || "default_id",
+          email: user.email || "no-email@example.com",
+          name: user.name || "Anonymous User",
+          profilePhoto : user.image || (user as any)?.avatar_url || "default_image_url",
+          provider: account.provider || "unknown",
         });
+
+        user.id = res.data?.data?.user?.id;
+        user.token = res?.data?.data.token;
+        user.email = res.data?.data?.user?.email;
+
         return res.data.success ? true : false;
       } catch (error) {
-        console.error("Sign-in error:", error);
+        if (axios.isAxiosError(error)) {
+          console.error("Sign-in error:", error.response?.data || error.message);
+        } else {
+          console.error("Sign-in error:", error);
+        }
         return false;
       }
     },
 
     async jwt({ token, user }) {
-      if (user) token.id = user.id;
-  
+      if (user) {
+        token.user = user;
+      }
       return token;
     },
 
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
+      if (token.user) {
+        session.user = token.user as customUser;
       }
+      console.log("Session", session);
       return session;
     },
   },
 
-  secret: process.env.NEXTAUTH_SECRET, // Ensure this is in `.env.local`
+  secret: process.env.NEXTAUTH_SECRET,
 
   pages: {
-    error: "/auth/error", // Custom error page (optional)
+    error: "/auth/error", 
   },
 };
