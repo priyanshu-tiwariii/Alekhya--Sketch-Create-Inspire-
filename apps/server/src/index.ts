@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import routes from './routes';
 import cookieParser from 'cookie-parser';
+import { env } from './config/env.config';
 
 const app = express();
 const server = createServer(app);
@@ -14,6 +15,6 @@ app.use(express.json());
 app.use(cors());
 app.use("/api/v1",routes);
 
-server.listen(5000,() => {
-  console.log('Server is running on http://localhost:5000');
+server.listen(env.PORT,() => {
+  console.log(`Http-Server is running on http://localhost:${env.PORT}`);
 });

@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import apiError from "../helpers/apiError";
+import { env } from "../config/env.config";
 
 
 
@@ -12,7 +13,7 @@ export const verifyToken = async (req: any, res: any, next: any) => {
     }
 
     try {
-        const verified = jwt.verify(token, process.env.JWT_SECRET!);
+        const verified = jwt.verify(token, env.JWT_SECRET!);
         if(verified){
             req.user = verified;
             console.log("User", req.user);
