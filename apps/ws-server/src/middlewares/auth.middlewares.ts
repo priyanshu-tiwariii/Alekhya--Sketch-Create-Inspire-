@@ -1,5 +1,7 @@
-import { verifyToken } from "../config/jwt.config";
+
 import { Socket } from "socket.io";
+import jwt from "jsonwebtoken";
+import { env } from "@repo/backend-common/config";
 
 
 export const authenticateSocket = async(req : any , callback : any) => {
@@ -13,7 +15,7 @@ export const authenticateSocket = async(req : any , callback : any) => {
         if (!token) {
             return callback(null, false);
         }
-        const verifiedToken = await verifyToken(token);
+        const verifiedToken = jwt.verify(token, env.JWT_SECRET!);
         if (verifiedToken) {
             return callback(null, true);
         } else {

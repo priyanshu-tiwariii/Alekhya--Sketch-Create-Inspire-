@@ -9,6 +9,7 @@
     "dev": "kill-port 8080 && tsc && node dist/index.js"
   },
   "dependencies": {
+    "@repo/backend-common": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",

@@ -1,7 +1,7 @@
 import express from "express";
 import { createServer } from "node:http";
 import { initializeSocket } from "./services/socket.service";
-import { env } from "./config/env.config";
+import { env } from "@repo/backend-common/config";
 
 const app = express();
 const server = createServer(app);
@@ -64,6 +64,6 @@ initializeSocket(server);
 //   });
 // });
 
-server.listen(env.PORT, () => {
-  console.log( `Server running at http://localhost:${env.PORT}`);
+server.listen(env.WS_PORT, () => {
+  console.log( `Server running at ${env.WS_BASE_URL}`);
 });

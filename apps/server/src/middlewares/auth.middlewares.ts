@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import apiError from "../helpers/apiError";
-import { env } from "../config/env.config";
+import { env } from "@repo/backend-common/config"
 
 
 

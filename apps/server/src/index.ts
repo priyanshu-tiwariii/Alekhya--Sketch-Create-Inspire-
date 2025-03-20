@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import routes from './routes';
 import cookieParser from 'cookie-parser';
-import { env } from './config/env.config';
+import { env } from '@repo/backend-common/config';
 
 const app = express();
 const server = createServer(app);
@@ -14,7 +14,6 @@ dotenv.config();
 app.use(express.json());
 app.use(cors());
 app.use("/api/v1",routes);
-
-server.listen(env.PORT,() => {
-  console.log(`Http-Server is running on http://localhost:${env.PORT}`);
+server.listen(env.HTTP_PORT,() => {
+  console.log(`Http-Server is running on port  ${env.HTTP_BASE_URL}`);
 });
