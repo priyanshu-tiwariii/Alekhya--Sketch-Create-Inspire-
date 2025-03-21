@@ -1,19 +1,21 @@
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 
+import { UserSchema } from "./schema/UserSchema.js"; 
 
-export const env = {
-    JWT_SECRET: process.env.JWT_SECRET,
-    WS_PORT: process.env.WS_PORT||8080,
-    HTTP_PORT: process.env.HTTP_PORT||5000,
-    HTTP_BASE_URL: process.env.HTTP_BASE_URL,
-    WS_BASE_URL: process.env.WS_BASE_URL,
+export const schemas = {
+  UserSchema,
 };
 
+
+//Why to use -> Record<string, z.ZodSchema>
+// TypeScript no longer needs to "guess" the type
+// Fixes the error by making the type clear and portable
+
+// Record<K, V> -> It is a TypeScript utility type that defines an object where:
+// K (keys) are strings
+// V (values) are Zod schemas
+// string → The keys of the object must be strings
+// Example: "UserSchema", "ProductSchema", etc.
+
+// z.ZodSchema → The values must be Zod schema objects
+// Example: UserSchema, ProductSchema, etc.

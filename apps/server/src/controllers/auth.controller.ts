@@ -3,21 +3,18 @@ import asyncHandler from "../helpers/asyncHandler";
 import apiError from "../helpers/apiError";
 import apiResponse from "../helpers/apiResponse";
 import jwt from "jsonwebtoken";
+import { schemas } from "@repo/backend-common/schemas";
 
 export const authController = asyncHandler(async (req: any, res: any) => {
-  let { id, email, name, profilePhoto, provider } = req.body;
-
-  if (!id || !email || !name || !profilePhoto || !provider) {
-    throw new apiError(400, "Please provide all required fields");
+  
+  const parseSchema = schemas.UserSchema.safeParse(req.body);
+  if(!parseSchema.success){
+    throw new apiError(400, parseSchema.error.errors.map(e => e.message).join(", "));
   }
 
-  if (typeof id !== "string") {
-    id = id.toString();
-  }
+  const { id, email, name, profilePhoto, provider } = parseSchema.data;
 
- 
   const user = await prisma.user.findUnique({ where: { email } });
-
   let createdUser;
   if (!user) {
     try {
@@ -29,7 +26,7 @@ export const authController = asyncHandler(async (req: any, res: any) => {
           name,
           profilePhoto,
           provider,
-          userName,
+          userName: userName || "defaultUserName",
         },
       });
       console.log("User created successfully");
