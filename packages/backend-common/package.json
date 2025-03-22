@@ -1,25 +1,20 @@
 {
-    "name": "@repo/backend-common",
-    "version": "0.0.0",
-    "type": "module", 
-    "dependencies": {
-      "dotenv": "^16.4.7",
-      "zod": "^3.24.2"
-    },
-    "scripts": {
-        "build": "tsc -b"
-    },
-    "exports": {
-        "./config": "./dist/config/env.config.js",
-        "./schemas": "./dist/index.js" 
-      },
-    "main": "index.js",
-    "devDependencies": {
-      "@repo/typescript-config": "workspace:*",
-      "@types/node": "^22.13.9"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "description": ""
-  }
+  "name": "@repo/backend-common",
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "dotenv": "^16.4.7"
+  },
+  "exports": {
+    "./config": "./src/config/env.config.ts"
+  },
+  "main": "index.js",
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.13.9"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

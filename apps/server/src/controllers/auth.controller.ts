@@ -3,7 +3,7 @@ import asyncHandler from "../helpers/asyncHandler";
 import apiError from "../helpers/apiError";
 import apiResponse from "../helpers/apiResponse";
 import jwt from "jsonwebtoken";
-import { schemas } from "@repo/backend-common/schemas";
+import { schemas } from "@repo/common/schemas";
 
 export const authController = asyncHandler(async (req: any, res: any) => {
   
