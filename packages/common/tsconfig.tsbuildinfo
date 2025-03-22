@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/schema/userschema.ts"],"version":"5.8.2"}
+{"root":["./src/index.ts","./src/schema/chatroomschema.ts","./src/schema/messageschema.ts","./src/schema/userschema.ts"],"version":"5.8.2"}
