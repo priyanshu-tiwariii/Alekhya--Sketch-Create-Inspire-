@@ -9,7 +9,7 @@ import SessionProvider from "../Providers/SessionProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Chitran",
+  title: "Chitran - Sketch. Create. Inspire.",
   description: "Sketch-Create-Inspire",
 }; 
 

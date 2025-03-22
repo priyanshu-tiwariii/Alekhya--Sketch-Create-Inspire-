@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,15 +7,48 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id        String   @unique
-  createdAt DateTime @default(now())
-  email     String   @unique
-  name      String?
-  userName  String   @id
-  bio       String?  
-  profilePhoto String? 
-  provider String
+  id            String      @id @default(uuid()) 
+  createdAt     DateTime    @default(now())
+  email         String      @unique
+  name          String?
+  userName      String      @unique 
+  bio           String?
+  profilePhoto  String?
+  provider      String
+  createdRooms  ChatRoom[]  @relation("ChatRoomAdmins") 
+  joinedRooms   ChatRoom[]  @relation("ChatRoomMembers") 
+  chatMessages  RoomChatMessage[] @relation("ChatMessages") 
+  sentMessages  SingleRoomMessage[] @relation("SentMessages") 
+  receivedMessages SingleRoomMessage[] @relation("ReceivedMessages") 
 }
 
+model ChatRoom {
+  id              String      @id @default(uuid())
+  createdAt       DateTime    @default(now())
+  slug            String      @unique 
+  createdByUser   User        @relation("ChatRoomAdmins", fields: [createdByUserId], references: [id]) 
+  createdByUserId String      
+  members         User[]      @relation("ChatRoomMembers") 
+  messages        RoomChatMessage[] @relation("ChatRoomMessages")
+}
+
+model RoomChatMessage {
+  id          String    @id @default(uuid())
+  message     String   
+  createdAt   DateTime  @default(now()) 
+  sendBy      User      @relation("ChatMessages", fields: [sendById], references: [id])
+  sendById    String    
+  chatRoom    ChatRoom  @relation("ChatRoomMessages", fields: [chatRoomId], references: [id])
+  chatRoomId  String   
+}
+
+model SingleRoomMessage {
+  id          String    @id @default(uuid())
+  message     String
+  createdAt   DateTime  @default(now())
+  sendBy      User      @relation("SentMessages", fields: [sendById], references: [id])
+  sendById    String
+  receivedBy  User      @relation("ReceivedMessages", fields: [receivedById], references: [id])
+  receivedById String
+}
