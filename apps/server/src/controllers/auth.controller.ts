@@ -38,8 +38,9 @@ export const authController = asyncHandler(async (req: any, res: any) => {
 
 
   const jwtPayload = {
-    id,
-    email,
+    id: user?.id || createdUser?.id,
+    email: user?.email || createdUser?.email,
+    name: user?.name || createdUser?.name,
   };
 
   if (!process.env.JWT_SECRET) {

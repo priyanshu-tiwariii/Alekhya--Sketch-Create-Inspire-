@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import apiError from "../helpers/apiError";
 import { env } from "@repo/backend-common/config"
-
+import prisma from "../db/prismaClient";
 
 
 export const verifyToken = async (req: any, res: any, next: any) => {
@@ -13,9 +13,11 @@ export const verifyToken = async (req: any, res: any, next: any) => {
     }
 
     try {
-        const verified = jwt.verify(token, env.JWT_SECRET!);
+        const verified = jwt.verify(token, env.JWT_SECRET!)as { email: string };
+       
         if(verified){
-            req.user = verified;
+            const user = await prisma.user.findUnique({where:{email : verified.email}});
+            req.user = user;
             console.log("User", req.user);
             next();
         }     
