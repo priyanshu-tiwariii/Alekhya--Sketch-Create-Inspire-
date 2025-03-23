@@ -24,7 +24,7 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(express@4.21.2)
       '@prisma/client':
-        specifier: ^6.4.1
+        specifier: ^6.5.0
         version: 6.5.0(prisma@6.5.0)(typescript@5.8.2)
       '@repo/backend-common':
         specifier: workspace:*
@@ -215,7 +215,7 @@ importers:
     dependencies:
       '@prisma/client':
         specifier: ^6.4.1
-        version: 6.5.0(prisma@6.5.0)(typescript@5.8.2)
+        version: 6.5.0(prisma@6.5.0)
     devDependencies:
       '@types/node':
         specifier: ^22.13.9
@@ -1018,6 +1018,22 @@ packages:
     engines: {node: '>=14'}
     requiresBuild: true
     optional: true
+
+  /@prisma/client@6.5.0(prisma@6.5.0):
+    resolution: {integrity: sha512-M6w1Ql/BeiGoZmhMdAZUXHu5sz5HubyVcKukbLs3l0ELcQb8hTUJxtGEChhv4SVJ0QJlwtLnwOLgIRQhpsm9dw==}
+    engines: {node: '>=18.18'}
+    requiresBuild: true
+    peerDependencies:
+      prisma: '*'
+      typescript: '>=5.1.0'
+    peerDependenciesMeta:
+      prisma:
+        optional: true
+      typescript:
+        optional: true
+    dependencies:
+      prisma: 6.5.0(typescript@5.8.2)
+    dev: false
 
   /@prisma/client@6.5.0(prisma@6.5.0)(typescript@5.8.2):
     resolution: {integrity: sha512-M6w1Ql/BeiGoZmhMdAZUXHu5sz5HubyVcKukbLs3l0ELcQb8hTUJxtGEChhv4SVJ0QJlwtLnwOLgIRQhpsm9dw==}

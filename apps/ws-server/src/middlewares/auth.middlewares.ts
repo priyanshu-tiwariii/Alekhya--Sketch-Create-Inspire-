@@ -1,7 +1,8 @@
 
-import { Socket } from "socket.io";
+
 import jwt from "jsonwebtoken";
 import { env } from "@repo/backend-common/config";
+import prisma from "../db/prismaClient";
 
 
 export const authenticateSocket = async(req : any , callback : any) => {
@@ -15,12 +16,17 @@ export const authenticateSocket = async(req : any , callback : any) => {
         if (!token) {
             return callback(null, false);
         }
-        const verifiedToken = jwt.verify(token, env.JWT_SECRET!);
-        if (verifiedToken) {
-            return callback(null, true);
-        } else {
+        const verifiedToken = jwt.verify(token, env.JWT_SECRET!) as { email: string };
+       if(!verifiedToken){
+           return callback(null, false);
+       }
+         const user = await prisma.user.findUnique({where:{email : verifiedToken.email}});
+        if(!user){
             return callback(null, false);
         }
+        (req as any).user = user;
+        return callback(null, true);
+        
         
     } catch (error) {
         console.log("Error in auth middleware ", error);

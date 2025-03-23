@@ -10,7 +10,7 @@
         "db:deploy": "prisma migrate deploy"
     },
     "exports": {
-        ".": "./src/index.ts"
+        "./prismaClient": "./src/index.ts"
     },
     "devDependencies": {
         "@types/node": "^22.13.9",

@@ -16,6 +16,7 @@ export const initializeSocket = (server : any) => {
 
     io.on("connection", (socket) => {
         console.log(`A user connected: ${socket.id}`);
+        console.log("Message from user : " + (socket.request as any).user.userName);
 
         socket.on("message", (msg) => {
             console.log(`Message from ${socket.id}: ${msg}`);
