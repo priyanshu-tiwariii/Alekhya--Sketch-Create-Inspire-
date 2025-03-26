@@ -9,6 +9,7 @@
     "dev": "kill-port 8080 && tsc && node dist/index.js"
   },
   "dependencies": {
+    "@prisma/client": "^6.5.0",
     "@repo/backend-common": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/typescript-config": "workspace:*",

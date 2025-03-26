@@ -2,7 +2,8 @@
     "name": "@repo/db",
     "version": "0.0.0",
     "dependencies": {
-        "@prisma/client": "^6.4.1"
+        "@prisma/client": "^6.4.1",
+        "dotenv": "^16.4.7"
     },
     "scripts": {
         "db:generate": "prisma generate",
@@ -13,7 +14,7 @@
         "./prismaClient": "./src/index.ts"
     },
     "devDependencies": {
-        "@types/node": "^22.13.9",
+        "@types/node": "^22.13.10",
         "prisma": "6.5.0"
     }
 }
