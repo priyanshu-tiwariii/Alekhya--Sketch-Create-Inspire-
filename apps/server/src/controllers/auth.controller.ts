@@ -1,4 +1,4 @@
-import prisma from "../db/prismaClient";
+import { prisma } from "@repo/db";
 import asyncHandler from "../helpers/asyncHandler";
 import apiError from "../helpers/apiError";
 import apiResponse from "../helpers/apiResponse";

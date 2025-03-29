@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+    output   = "../src/generated/client"
 }
 
 datasource db {
@@ -7,52 +8,49 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User Table
 model User {
-  id            String         @id @default(uuid()) 
-  createdAt     DateTime       @default(now())
-  email         String         @unique
-  name          String?
-  userName      String         @unique 
-  bio           String?
-  profilePhoto  String?
-  provider      String
-  createdFiles  CreatedFile[]  @relation("CreatedFiles")
+  createdAt      DateTime       @default(now())
+  email          String         @unique
+  name           String?
+  bio            String?
+  profilePhoto   String?
+  userName       String         @unique
+  provider       String
+  id             String         @id @default(uuid())
   collaborations Collaborator[] @relation("UserCollaborations")
+  createdFiles   CreatedFile[]  @relation("CreatedFiles")
 }
 
 model CreatedFile {
-  id            String          @id @default(uuid()) 
-  name          String          
-  createdAt     DateTime        @default(now())
-  createdByUser User            @relation("CreatedFiles", fields: [createdByUserId], references: [id])
+  id              String         @id @default(uuid())
+  createdAt       DateTime       @default(now())
   createdByUserId String
-  strokes       Stroke[]        @relation("Strokes")
-  collaborators Collaborator[]  @relation("Collaborators")
+  name            String
+  collaborators   Collaborator[] @relation("Collaborators")
+  createdByUser   User           @relation("CreatedFiles", fields: [createdByUserId], references: [id])
+  strokes         Stroke[]       @relation("Strokes")
 }
-
 
 model Stroke {
-  id            String       @id @default(uuid())  
-  file          CreatedFile  @relation("Strokes", fields: [fileId], references: [id])
-  fileId        String
-  data          Json         
-  createdAt     DateTime     @default(now())
+  id        String      @id @default(uuid())
+  fileId    String
+  data      Json
+  createdAt DateTime    @default(now())
+  file      CreatedFile @relation("Strokes", fields: [fileId], references: [id])
 }
 
+model Collaborator {
+  id       String      @id @default(uuid())
+  fileId   String
+  userId   String
+  role     Role        @default(USER)
+  joinedAt DateTime    @default(now())
+  file     CreatedFile @relation("Collaborators", fields: [fileId], references: [id])
+  user     User        @relation("UserCollaborations", fields: [userId], references: [id])
+}
 
 enum Role {
   ADMIN
   USER
   EDITOR
-}
-
-model Collaborator {
-  id            String       @id @default(uuid())
-  file          CreatedFile  @relation("Collaborators", fields: [fileId], references: [id])
-  fileId        String
-  user          User         @relation("UserCollaborations",fields: [userId], references: [id])
-  userId        String
-  role          Role         @default(USER)    
-  joinedAt      DateTime     @default(now())
 }
