@@ -1,11 +1,14 @@
 
 
-import { ChatRoomSchema } from "./schema/ChatRoomSchema.js";
-import { MessageSchema } from "./schema/MessageSchema.js";
+
+import { CollaboratorSchema } from "./schema/CollaboratorSchema.js";
+import { FileSchema } from "./schema/FileSchema.js";
+import { StrokeSchema } from "./schema/StrokeSchema.js";
 import { UserSchema } from "./schema/UserSchema.js"; 
 
 export const schemas = {
   UserSchema,
-  MessageSchema,
-  ChatRoomSchema
+  FileSchema,
+  CollaboratorSchema,
+  StrokeSchema
 };
