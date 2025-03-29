@@ -1,8 +1,9 @@
 {
-  "extends" : "@repo/typescript-config/base.json",
+  "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
-      "rootDir": "./src",
-      "outDir": "./dist",
-      "skipLibCheck": true //tell to skip 3 party libraries typescript check
-  }
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "skipLibCheck": true
+  },
+  "include": ["./src/**/*.ts"]
 }

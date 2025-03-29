@@ -1,0 +1,151 @@
+import { prisma } from "@repo/db";
+import asyncHandler from "../helpers/asyncHandler";
+import apiError from "../helpers/apiError";
+import apiResponse from "../helpers/apiResponse";
+import { Request, Response } from "express";
+import { schemas } from "@repo/common/schemas";
+interface User {
+    id: string;
+    email: string;
+    name: string;
+    profilePhoto: string;
+    provider: string;
+    userName: string;
+    bio: string;
+    createdAt: Date;
+  }
+
+  
+  declare module "express" {
+    interface Request {
+      user?: User;
+    }
+  }
+
+export const createFile = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const validateFileSchema = schemas.FileSchema.safeParse(req.body);
+    if (!validateFileSchema.success) {
+      throw new apiError(400, validateFileSchema.error.errors.map(e => e.message).join(", "));
+    }
+
+    const { name, createdByUserId } = validateFileSchema.data;
+
+    if (createdByUserId !== req.user?.id) {
+      throw new apiError(403, "User not authorized to create file");
+    }
+
+    const file = await prisma.createdFile.create({
+      data: {
+        name,
+        createdByUserId,
+        collaborators: {
+          create: [{ userId: createdByUserId, role: "ADMIN" }],
+        },
+      },
+    });
+
+    return res.status(201).json(new apiResponse(file, 201, "File created successfully", true));
+  } catch (error) {
+    console.error("Error creating file:", error);
+    if (error instanceof apiError) {
+      throw new apiError(error.status, error.message);
+    } else if (error instanceof Error) {
+      throw new apiError(500, error.message || "Database error while creating file");
+    } else {
+      throw new apiError(500, "Unknown error occurred while creating file");
+    }
+  }
+});
+
+
+
+export const getFile = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const fileId = req.params.fileId;
+    const file = await prisma.createdFile.findUnique({
+      where: { id: fileId },
+      include: { collaborators: true },
+    });
+
+    if (!file) throw new apiError(404, "File not found");
+
+    const isCollaborator = file.collaborators.some((c: { userId: string | undefined; }) => c.userId === req.user?.id);
+    if (!isCollaborator) throw new apiError(403, "User not authorized to access this file");
+
+    return res.status(200).json(new apiResponse(file, 200, "File fetched successfully", true));
+  } catch (error) {
+    console.error("Error fetching file:", error);
+    if (error instanceof apiError) {
+      throw new apiError(error.status, error.message);
+    } else if (error instanceof Error) {
+      throw new apiError(500, error.message || "Database error while fetching file");
+    } else {
+      throw new apiError(500, "Unknown error occurred while fetching file");
+    }
+  }
+});
+
+// -- Get all files --
+export const getAllFiles = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) throw new apiError(400, "User ID not found in request");
+
+    const files = await prisma.createdFile.findMany({
+      where: { collaborators: { some: { userId } } },
+      include: { collaborators: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!files) throw new apiError(404, "No files found for this user");
+    if (files.length === 0) throw new apiError(404, "No files found for this user");
+
+    return res.status(200).json(new apiResponse(files, 200, files.length ? "Files fetched successfully" : "No files found", true));
+  } catch (error) {
+    console.error("Error fetching files:", error);
+    if (error instanceof apiError) {
+      throw new apiError(error.status, error.message);
+    } else if (error instanceof Error) {
+      throw new apiError(500, error.message || "Database error while fetching files");
+    } else {
+      throw new apiError(500, "Unknown error occurred while fetching files");
+    }
+  }
+});
+
+// -- Delete file --
+
+export const deleteFile = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const fileId = req.params.fileId;
+    console.log("User ID:", userId);
+    console.log("File ID:", fileId);
+    if (!userId) throw new apiError(400, "User ID not found in request");
+    if (!fileId) throw new apiError(400, "File ID not found in request");
+
+    const file = await prisma.createdFile.findUnique({
+      where: { id: fileId },
+      include: { collaborators: true },
+    });
+
+    if (!file) throw new apiError(404, "File not found");
+
+    const userIsAdmin = file.collaborators.some((c: { userId: string; role: string; }) => c.userId === userId && c.role === "ADMIN");
+    if (!userIsAdmin) throw new apiError(403, "User not authorized to delete this file");
+
+    const deletedFile = await prisma.createdFile.delete({ where: { id: fileId } });
+
+    return res.status(200).json(new apiResponse(deletedFile, 200, "File deleted successfully", true));
+  } catch (error) {
+    console.error("Error deleting file:", error);
+    if (error instanceof apiError) {
+      throw new apiError(error.status, error.message);
+    } else if (error instanceof Error) {
+      throw new apiError(500, error.message || "Database error while deleting file");
+    } else {
+      throw new apiError(500, "Unknown error occurred while deleting file");
+    }
+  }
+});

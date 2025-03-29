@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import apiError from "../helpers/apiError";
 import { env } from "@repo/backend-common/config"
-import prisma from "../db/prismaClient";
+import { prisma } from "@repo/db";
 
 
 export const verifyToken = async (req: any, res: any, next: any) => {
@@ -23,6 +23,14 @@ export const verifyToken = async (req: any, res: any, next: any) => {
         }     
     } catch (error) {
         console.log("Error", error);
-        throw new apiError(401, "Invalid Token");
+        if(error instanceof jwt.JsonWebTokenError){
+            throw new apiError(401, "Invalid Token");
+        }
+        else if(error instanceof jwt.TokenExpiredError){
+            throw new apiError(401, "Token Expired");
+        }
+        else{
+            throw new apiError(401, "Invalid Token");
+        }
     }
 };

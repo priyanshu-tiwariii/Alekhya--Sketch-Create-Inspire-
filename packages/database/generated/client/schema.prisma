@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/client"
+  output   = "../generated/client"
 }
 
 datasource db {
@@ -36,7 +36,7 @@ model Stroke {
   fileId    String
   data      Json
   createdAt DateTime    @default(now())
-  file      CreatedFile @relation("Strokes", fields: [fileId], references: [id])
+  file      CreatedFile @relation("Strokes", fields: [fileId], references: [id], onDelete: Cascade)
 }
 
 model Collaborator {
@@ -45,8 +45,8 @@ model Collaborator {
   userId   String
   role     Role        @default(USER)
   joinedAt DateTime    @default(now())
-  file     CreatedFile @relation("Collaborators", fields: [fileId], references: [id])
-  user     User        @relation("UserCollaborations", fields: [userId], references: [id])
+  file     CreatedFile @relation("Collaborators", fields: [fileId], references: [id], onDelete: Cascade)
+  user     User        @relation("UserCollaborations", fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum Role {
