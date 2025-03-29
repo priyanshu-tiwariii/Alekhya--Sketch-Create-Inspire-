@@ -7,48 +7,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// User Table
 model User {
-  id            String      @id @default(uuid()) 
-  createdAt     DateTime    @default(now())
-  email         String      @unique
+  id            String         @id @default(uuid()) 
+  createdAt     DateTime       @default(now())
+  email         String         @unique
   name          String?
-  userName      String      @unique 
+  userName      String         @unique 
   bio           String?
   profilePhoto  String?
   provider      String
-  createdRooms  ChatRoom[]  @relation("ChatRoomAdmins") 
-  joinedRooms   ChatRoom[]  @relation("ChatRoomMembers") 
-  chatMessages  RoomChatMessage[] @relation("ChatMessages") 
-  sentMessages  SingleRoomMessage[] @relation("SentMessages") 
-  receivedMessages SingleRoomMessage[] @relation("ReceivedMessages") 
+  createdFiles  CreatedFile[]  @relation("CreatedFiles")
+  collaborations Collaborator[] @relation("UserCollaborations")
 }
 
-model ChatRoom {
-  id              String      @id @default(uuid())
-  createdAt       DateTime    @default(now())
-  slug            String      @unique 
-  createdByUser   User        @relation("ChatRoomAdmins", fields: [createdByUserId], references: [id]) 
-  createdByUserId String      
-  members         User[]      @relation("ChatRoomMembers") 
-  messages        RoomChatMessage[] @relation("ChatRoomMessages")
+model CreatedFile {
+  id            String          @id @default(uuid())  // Renamed file_id to id for consistency
+  createdAt     DateTime        @default(now())
+  createdByUser User            @relation("CreatedFiles", fields: [createdByUserId], references: [id])
+  createdByUserId String
+  strokes       Stroke[]        @relation("Strokes")
+  collaborators Collaborator[]  @relation("Collaborators")
 }
 
-model RoomChatMessage {
-  id          String    @id @default(uuid())
-  message     String   
-  createdAt   DateTime  @default(now()) 
-  sendBy      User      @relation("ChatMessages", fields: [sendById], references: [id])
-  sendById    String    
-  chatRoom    ChatRoom  @relation("ChatRoomMessages", fields: [chatRoomId], references: [id])
-  chatRoomId  String   
+
+model Stroke {
+  id            String       @id @default(uuid())   // Renamed stroke_id to id
+  file          CreatedFile  @relation("Strokes", fields: [fileId], references: [id])
+  fileId        String
+  data          Json         
+  createdAt     DateTime     @default(now())
 }
 
-model SingleRoomMessage {
-  id          String    @id @default(uuid())
-  message     String
-  createdAt   DateTime  @default(now())
-  sendBy      User      @relation("SentMessages", fields: [sendById], references: [id])
-  sendById    String
-  receivedBy  User      @relation("ReceivedMessages", fields: [receivedById], references: [id])
-  receivedById String
+
+enum Role {
+  ADMIN
+  USER
+  EDITOR
+}
+
+model Collaborator {
+  id            String       @id @default(uuid())
+  file          CreatedFile  @relation("Collaborators", fields: [fileId], references: [id])
+  fileId        String
+  user          User         @relation("UserCollaborations",fields: [userId], references: [id])
+  userId        String
+  role          Role         @default(USER)    
+  joinedAt      DateTime     @default(now())
 }
