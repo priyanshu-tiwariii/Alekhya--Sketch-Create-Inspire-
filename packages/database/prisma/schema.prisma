@@ -22,7 +22,8 @@ model User {
 }
 
 model CreatedFile {
-  id            String          @id @default(uuid())  // Renamed file_id to id for consistency
+  id            String          @id @default(uuid()) 
+  name          String          
   createdAt     DateTime        @default(now())
   createdByUser User            @relation("CreatedFiles", fields: [createdByUserId], references: [id])
   createdByUserId String
@@ -32,7 +33,7 @@ model CreatedFile {
 
 
 model Stroke {
-  id            String       @id @default(uuid())   // Renamed stroke_id to id
+  id            String       @id @default(uuid())  
   file          CreatedFile  @relation("Strokes", fields: [fileId], references: [id])
   fileId        String
   data          Json         
