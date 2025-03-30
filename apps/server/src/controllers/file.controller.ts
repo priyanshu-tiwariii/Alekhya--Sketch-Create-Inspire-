@@ -103,15 +103,25 @@ export const getAllFiles = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user?.id;
     if (!userId) throw new apiError(400, "User ID not found in request");
 
+    const cachedKey = `user:${userId}:files`;
+    const cachedFiles = await redis.get(cachedKey);
+    if (cachedFiles) {
+      const files = JSON.parse(cachedFiles);
+      return res.status(200).json(new apiResponse(files, 200, "Files fetched successfully", true));
+    }
+
+
+
     const files = await prisma.createdFile.findMany({
       where: { collaborators: { some: { userId } } },
-      include: { collaborators: true },
+      select : {id:true, name:true, createdAt:true},
       orderBy: { createdAt: "desc" },
+      take:10
     });
 
     if (!files) throw new apiError(404, "No files found for this user");
-    if (files.length === 0) throw new apiError(404, "No files found for this user");
-
+    
+    await redis.set(cachedKey, JSON.stringify(files), "EX", 60); 
     return res.status(200).json(new apiResponse(files, 200, files.length ? "Files fetched successfully" : "No files found", true));
   } catch (error) {
     console.error("Error fetching files:", error);
