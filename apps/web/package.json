@@ -12,10 +12,13 @@
   },
   "dependencies": {
     "@deemlol/next-icons": "^0.1.9",
+    "@heroicons/react": "^2.2.0",
     "@repo/ui": "workspace:*",
     "@upstash/ratelimit": "^2.0.5",
     "@upstash/redis": "^1.34.5",
     "axios": "^1.8.2",
+    "framer-motion": "^12.6.2",
+    "lucide-react": "^0.479.0",
     "next": "^15.2.1",
     "next-auth": "^4.24.11",
     "react": "^19.0.0",

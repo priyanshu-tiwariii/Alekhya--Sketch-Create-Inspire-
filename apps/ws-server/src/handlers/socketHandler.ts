@@ -48,6 +48,7 @@ export const handleDisconnection = async (socket: Socket, fileId: string, userId
         await redis.hdel(`file:${fileId}:users:${userId}`, "userId", "userName", "socketId");
 
         const activeUsers = Number(await redis.hget(`file:${fileId}`, "activeUsers") ?? 0);
+        console.log("ActiveUsers -> ",activeUsers);
 
         if (activeUsers <= 0) {
             await redis.expire(`file:${fileId}`, 600);
