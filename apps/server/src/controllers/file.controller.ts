@@ -1,9 +1,11 @@
-import { prisma } from "@repo/db";
+import { prisma } from "../db/index";
 import asyncHandler from "../helpers/asyncHandler";
 import apiError from "../helpers/apiError";
 import apiResponse from "../helpers/apiResponse";
 import { Request, Response } from "express";
 import { schemas } from "@repo/common/schemas";
+
+import {redis} from "../db/index";
 interface User {
     id: string;
     email: string;
@@ -44,6 +46,15 @@ export const createFile = asyncHandler(async (req: Request, res: Response) => {
         },
       },
     });
+
+    await redis.hset(`file:${file.id}`, {
+      createdByUserId: file.createdByUserId,
+      name: file.name,
+      createdAt: file.createdAt,
+      activeUsers :0,
+      lastEdit : null
+    }
+    );
 
     return res.status(201).json(new apiResponse(file, 201, "File created successfully", true));
   } catch (error) {

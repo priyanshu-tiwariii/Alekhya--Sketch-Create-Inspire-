@@ -2,7 +2,8 @@
 
 import jwt from "jsonwebtoken";
 import { env } from "@repo/backend-common/config";
-import { prisma } from "@repo/db";
+import { prisma } from "../db/index";
+
 
 
 export const authenticateSocket = async(req : any , callback : any) => {

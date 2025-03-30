@@ -1,10 +1,10 @@
-import {Server} from "socket.io"
+import { Server } from "socket.io";
+import { authenticateSocket } from "../middlewares/auth.middlewares";
+import { redis } from "../db/index";
+import { handleConnection } from "../handlers/socketHandler";
 
-import { authenticateSocket} from "../middlewares/auth.middlewares"
-
-
-export const initializeSocket = (server : any) => {
-    const io = new Server(server,{
+export const initializeSocket = (server: any) => {
+    const io = new Server(server, {
         cors: {
             origin: "*",
             methods: ["GET", "POST"]
@@ -14,19 +14,7 @@ export const initializeSocket = (server : any) => {
         allowRequest: authenticateSocket
     });
 
-    io.on("connection", (socket) => {
-        console.log(`A user connected: ${socket.id}`);
-        console.log("Message from user : " + (socket.request as any).user.userName);
+    io.on("connection", (socket) => handleConnection(socket));
 
-        socket.on("message", (msg) => {
-            console.log(`Message from ${socket.id}: ${msg}`);
-            io.emit("message", msg);
-        });
-
-        socket.on("disconnect", () => {
-            console.log(`User disconnected: ${socket.id}`);
-        });
-    }
-    )
     return io;
-}
+};
