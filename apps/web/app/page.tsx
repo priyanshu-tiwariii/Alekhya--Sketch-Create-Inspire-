@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession,getSession} from "next-auth/react";
+import { useSession} from "next-auth/react";
 import Navbar from "../components/NavBar";
 import Footer from "../components/Footer"
 import LoginButton from "../components/LoginButton";
@@ -42,22 +42,35 @@ import {
   RefreshCw
 } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const HomePage = () => {
-  const { data: session } = useSession();
+  const { data: session,status } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const primaryGradient = "bg-gradient-to-r from-[#ff9966] to-[#ff5e62]";
   const textGradient = "text-transparent bg-clip-text bg-gradient-to-r from-[#ff9966] to-[#ff5e62]";
+  const router = useRouter();
+   useEffect(() => {
+      if (session) {
+        router.push("/dashboard");
+      }
+    }, [session, router]);
 
-  return session ?(
-  
-  <div>
-    <Navbar/>
-    <p>User ID: {session.user?.id}</p>
-    
-    </div>) :(
-    
+    if (status === "loading")
+      return (
+        <div className="flex justify-center items-center min-h-screen bg-white">
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="absolute inset-2 bg-orange-500 rounded-full animate-ping"></div>
+        </div>
+      </div>
+      
+      );
 
+      
+    
+  return session ? (null):(
     <div className="min-h-screen bg-white">
       <Head>
         <title>Chitran | Collaborative Whiteboard for Teams</title>
@@ -110,8 +123,7 @@ const HomePage = () => {
                 transition={{ delay: 0.4, duration: 0.6 }}
                 className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start"
               >
-              <LoginButton 
-  name={
+              <LoginButton name={
     <span className="flex items-center">
       Create a Room <ArrowRight className="w-4 h-4 ml-2" />
     </span>
@@ -166,7 +178,7 @@ const HomePage = () => {
       </section>
 
       {/* Core Features */}
-      <section id="features" className="py-16 bg-gray-50 relative">
+      <section id="features" className="py-16 bg-gray-200/50 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 px-4">
             <motion.h2
@@ -289,7 +301,7 @@ const HomePage = () => {
       </section>
 
       {/* Use Cases */}
-      <section id="use-cases" className="py-16 bg-gray-50 relative">
+      <section id="use-cases" className="py-16 bg-gray-200/50 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 px-4">
             <motion.h2

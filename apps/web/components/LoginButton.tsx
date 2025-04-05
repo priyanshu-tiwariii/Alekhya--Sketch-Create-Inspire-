@@ -8,20 +8,23 @@ import {
   DialogDescription,
 } from "@repo/ui/components/ui/dialog";
 import { Button } from "./Button";
-import { FcGoogle } from "react-icons/fc"; // Google icon
-import { FaGithub } from "react-icons/fa"; // GitHub icon
+import { FcGoogle } from "react-icons/fc"; 
+import { FaGithub } from "react-icons/fa"; 
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-const LoginButton = ({ className, name, ...props }: { className?: string; name: string } & React.ComponentPropsWithoutRef<'button'>) => {
+const LoginButton = ({ className, name, ...props }: { className?: string; name: any } & React.ComponentPropsWithoutRef<'button'>) => {
   const { data: session } = useSession();
+  const router = useRouter();
+  useEffect(() => {
+    if (session) {
+      router.push("/dashboard");
+    }
+  }, [session, router]);
 
-  return session ? (
-    <button
-      onClick={() => signOut()}
-      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-    >
-      Logout
-    </button>
-  ) : (
+  if (session) return null;
+
+  return(
     <Dialog>
       <DialogTrigger asChild>
         <Button className={className} {...props}>{name}</Button>
