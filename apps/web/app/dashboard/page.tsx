@@ -6,42 +6,150 @@ import { FileCard } from '../../components/FileCard';
 import { FilePlus, Menu } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useSession } from 'next-auth/react';
-import Image from 'next/image';
+import { FILE_URL } from '../../lib/apiEndPoints';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id?: string | null;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      token?: string | null;
+    };
+  }
+}
 
 interface File {
-  id: string;
+  id: string | number;
   name: string;
   createdAt: string;
+  isSaving?: boolean;
 }
 
 export default function Dashboard() {
-  const [files, setFiles] = useState<File[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const queryClient = useQueryClient();
 
-  const handleCreateFile = (fileName: string) => {
-    const newFile: File = {
-      id: Date.now().toString(),
-      name: fileName,
-      createdAt: new Date().toISOString(),
-    };
-    setFiles((prev) => [...prev, newFile]);
+
+const query = useQuery({
+  queryKey: ["files"],
+  queryFn: async () => {
+    console.log("Session:", session?.user.token);
+    const res = await axios.get(FILE_URL, {
+      headers: {
+        'Authorization' : `${session?.user?.token}`,
+      }
+    });
+    return res.data;
+  },
+  enabled: !!session?.user.token,
+  staleTime: 0, 
+  cacheTime: 0,  
+  refetchOnWindowFocus: true,
+});
+
+useEffect(() => {
+  const handleResize = () => {
+    if (window.innerWidth >= 1024) setIsSidebarOpen(false);
   };
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
+
+
+
+
+if (status === 'unauthenticated') return <div>Access Denied</div>;
+if (status === 'loading' || query.isLoading) {
+  return (
+    <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ff7753]"></div>
+    </div>
+  );
+}
+
+
+const handleCreateFile = async (fileName: string) => {
+  const tempId = `temp-${Date.now()}`;
+  const newFile: File = {
+    id: tempId,
+    name: fileName,
+    createdAt: new Date().toISOString(),
+    isSaving: true,
+  };
+
+  queryClient.setQueryData(["files"], (oldData: any) => {
+    const currentFiles = oldData?.data || [];
+    return { ...oldData, data: [newFile, ...currentFiles] };
+  });
+
+  setShowModal(false);
+
+  try {
+    const res = await axios.post(
+      FILE_URL,
+      {
+        name: fileName,
+        createdByUserId: session?.user?.id,
+      },
+      {
+        headers: {
+          Authorization: `${session?.user?.token}`,
+        },
+      }
+    );
+
+    const createdFile: File = {
+      id: res.data.data.id,
+      name: res.data.data.name,
+      createdAt: res.data.data.createdAt,
+      isSaving: false,
+    };
+
+
+    queryClient.setQueryData(["files"], (oldData: any) => {
+      const updatedFiles = oldData.data.map((file: File) =>
+        file.id === tempId ? createdFile : file
+      );
+      return { ...oldData, data: updatedFiles };
+    });
+
+  } catch (error) {
+    console.error("Error creating file:", error);
+
+    queryClient.setQueryData(["files"], (oldData: any) => {
+      const filteredFiles = oldData.data.filter((file: File) => file.id !== tempId);
+      return { ...oldData, data: filteredFiles };
+    });
+
+    toast.error("Failed to create file. Please try again.");
+  }
+};
+
+  
 
   const handleLogout = () => {
     signOut({ callbackUrl: '/' });
   };
 
+  const LoadingSkeleton = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="bg-white p-4 rounded-lg shadow-sm animate-pulse">
+          <div className="h-6 bg-gray-200 rounded mb-3 w-3/4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+      ))}
+    </div>
+  );
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) setIsSidebarOpen(false);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
+ 
   return (
     <div className="flex min-h-screen bg-[#fefaf7] text-[#2d2d2d] relative">
       {/* Sidebar */}
@@ -73,7 +181,10 @@ export default function Dashboard() {
 
           {/* File Section */}
           <section>
-            {files.length === 0 ? (
+            {
+            query.isLoading ? (
+              <LoadingSkeleton />
+            ):query.data?.data.length === 0 ? (
               <div className="text-center mt-24 sm:mt-32">
                 <div className="inline-block bg-[#ffe4dc] p-4 sm:p-5 rounded-full mb-6">
                   <FilePlus size={32} className="text-[#ff7753]" />
@@ -85,9 +196,18 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {files.map((file) => (
-                  <FileCard key={file.id} file={file} />
-                ))}
+                {query.data?.data.map((file: File, index: number) => {
+  const fileId = file.id ?? `file-${index}`;
+  return (
+    <FileCard
+      key={fileId.toString()}
+      file={{ ...file, id: fileId.toString() }}
+      onDelete={(id) => {
+        console.log("Deleting file with ID:", id);
+      }}
+    />
+  );
+})}
               </div>
             )}
           </section>
