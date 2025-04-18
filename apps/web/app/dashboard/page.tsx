@@ -11,6 +11,7 @@ import { FILE_URL } from '../../lib/apiEndPoints';
 import { useQuery, useQueryClient,UseQueryOptions } from '@tanstack/react-query';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 declare module 'next-auth' {
   interface Session {
@@ -32,14 +33,17 @@ interface File {
 }
 
 export default function Dashboard() {
+
+  // State variables -------------------------------------------------------------------------------------------------------------------------
   const [showModal, setShowModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [page, setPage] = useState(1); 
   const [limit] = useState(10); 
   const queryClient = useQueryClient();
-
+  const router = useRouter();
   const { data: session, status } = useSession();
 
+  // Fetching files from server using React Query -----------------------------------------------------------------------------------
   const query = useQuery<any, Error>({
     queryKey: ['files', page],
     queryFn: async () => {
@@ -58,6 +62,7 @@ export default function Dashboard() {
   }as UseQueryOptions<any, Error>
 );
 
+// Handle sidebar open/close on mobile devices -------------------------------------------------------------------------------------------------
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) setIsSidebarOpen(false);
@@ -74,6 +79,9 @@ export default function Dashboard() {
       </div>
     );
   }
+
+
+  // Handle creation of file --------------------------------------------------------------------------------------------------------------------
 
   const handleCreateFile = async (fileName: string) => {
     const toastId = toast.loading('Creating file...');
@@ -134,7 +142,7 @@ export default function Dashboard() {
     }
   };
   
-
+// HAndle Delete File ------------------------------------------------------------------------------------------------------------------------
   const handleDeleteFile = async (fileId: string) => {
     try {
       await axios.delete(`${FILE_URL}/${fileId}`, {
@@ -152,6 +160,13 @@ export default function Dashboard() {
     }
   };
 
+
+  // Handle Open File --------------------------------------------------------------------------------------------------------------------------
+  const handleOpenFile = (fileId: string) => {
+    router.push(`/canvas/${fileId}`);
+  };
+
+  //HAndle logout ->
   const handleLogout = () => {
     signOut({ callbackUrl: '/' });
   };
@@ -215,6 +230,10 @@ export default function Dashboard() {
                         onDelete={(id) => {
                           handleDeleteFile(id);
                         }}
+                        onClick={() => {
+                          handleOpenFile(fileId.toString());
+                        }}
+
                       />
                     );
                   })}
