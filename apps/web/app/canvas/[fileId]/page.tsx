@@ -1,12 +1,22 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
-
+import { useRef, useEffect,useState } from 'react';
+import { CanvaToolbar } from '../../../components/CanvaToolbar';
 export default function CanvasPage() {
   const canvaRef = useRef<HTMLCanvasElement | null>(null);
+  const [canvasSize, setCanvasSize] = useState({
+    width : 0,
+    height : 0
+  });
 
+  const [selectedTool, setSelectedTool] = useState<'rectangle' | 'circle' | 'line' | 'arrow' | 'text' | 'eraser'>('rectangle');
+  
 
   useEffect(() => {
+    setCanvasSize({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
     const canvas = canvaRef.current;
     if (!canvas) return;
 
@@ -18,6 +28,7 @@ export default function CanvasPage() {
     let startY = 0;
 
     const rectangles :Array <{ x: number; y: number; w: number; h: number }> = [];
+    
     const drawAllRectangles = ()=>{
       ctx.clearRect(0, 0, canvas.width, canvas.height); 
       ctx.strokeStyle = 'skyblue'; 
@@ -53,7 +64,7 @@ export default function CanvasPage() {
       ctx.fillRect(startX, startY, width, height);
     };
 
-    const handleMouseUp = (e: MouseEvent) => {  // Fixed: Added e parameter
+    const handleMouseUp = (e: MouseEvent) => {
       if (isDrawing) {
         const rect = canvas.getBoundingClientRect();
         const currentX = e.clientX - rect.left;
@@ -88,19 +99,18 @@ export default function CanvasPage() {
     <div>
       <canvas
         ref={canvaRef}
-        style={{
+        className="absolute top-0 left-0 cursor-crosshair z-10"
+       width = {canvasSize.width}
+        height = {canvasSize.height}
         
-          cursor: 'crosshair',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          zIndex: 1,
-        }}
-        width={window.innerWidth}
-        height={window.innerHeight}
       />
-      <h1>Canvas Drawing Page</h1>
-      <p>Click and drag to draw rectangles</p>
+      <CanvaToolbar
+        selectedTool={selectedTool}
+        undo={() => {}}
+        redo={() => {}}
+        clear={() => {}}
+        setSelectedTool={setSelectedTool}
+      />
     </div>
   );
 }
