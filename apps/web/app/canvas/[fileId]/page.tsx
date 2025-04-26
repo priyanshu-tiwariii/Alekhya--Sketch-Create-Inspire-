@@ -5,15 +5,19 @@ import { CanvaToolbar } from '../../../components/CanvaToolbar';
 import { drawRectangle } from '../../../components/CanvasTools/drawRectangle';
 import { drawCircle } from '../../../components/CanvasTools/drawCircle';
 import { drawLine } from '../../../components/CanvasTools/drawLine';
+import { drawText } from '../../../components/CanvasTools/writeText';
 
 type Shape = {
-  id:string;
+  id: string;
   type: 'rectangle' | 'circle' | 'line' | 'arrow' | 'text' | 'eraser';
   x: number;
   y: number;
   w: number;
   h: number;
   radius?: number;
+  text?: string;
+  fontSize?: number;
+  fontFamily?: string;
 };
 
 export default function CanvasPage() {
@@ -23,22 +27,72 @@ export default function CanvasPage() {
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [selectedTool, setSelectedTool] = useState<Shape["type"]>('rectangle');
 
+  // Text Editing State -------------------------------------------------------------------------------------------------------------------------------------------------
+    const [editingText, setEditingText] = useState<{
+      id: string;
+      text: string;
+      x: number;
+      y: number;
+    } | null>(null);
+  // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+  const textInputRef = useRef<HTMLInputElement | null>(null);
+
   const strokeColor = 'white';
-  const fillColor = undefined;
+  const fillColor = undefined;  
 
-  useEffect(() => {
-    setCanvasSize({ width: window.innerWidth, height: window.innerHeight });
-
+  // Handle text input completion ------------ -------------------------------------------------------------------------------------------------------------------------------------------------
+  const handleTextComplete = () => {
+    if (!editingText || !editingText.text.trim()) {
+      setEditingText(null);
+      return;
+    }
+  
     const canvas = canvaRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+  
+    ctx.font = '20px Arial';
+    const metrics = ctx.measureText(editingText.text);
+  
+    shapes.current = shapes.current.filter((shape) => shape.id !== editingText.id);
+    const newTextShape: Shape = {
+      id: editingText.id,
+      type: 'text',
+      x: editingText.x,
+      y: editingText.y,
+      w: metrics.width,
+      h: 20,
+      text: editingText.text,
+      fontSize: 20,
+      fontFamily: 'Arial',
+    };
+  
+    shapes.current.push(newTextShape);
+    drawAllShapes();
+    setEditingText(null);
+  };
+  
+  
+  // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
-    let isDrawing = false;
-    let startX = 0;
-    let startY = 0;
+  // Handle key down in text input  -------------------------------------------------------------------------------------------------------------------------------------------------
+    const handleTextKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        handleTextComplete();
+      } else if (e.key === 'Escape') {
+        setEditingText(null);
+      }
+    };
+  // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
+  // Draw all shapes on canvas -------------------------------------------------------------------------------------------------------------------------------------------------
     const drawAllShapes = () => {
+      const canvas = canvaRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       shapes.current.forEach((shape) => {
         if (shape.type === 'rectangle') {
@@ -53,15 +107,14 @@ export default function CanvasPage() {
           });
         } else if (shape.type === 'circle') {
           drawCircle({
-            x: shape.x + shape.w / 2, 
+            x: shape.x + shape.w / 2,
             y: shape.y + shape.h / 2,
             radius: shape.radius || Math.abs(shape.w) / 2,
             color: strokeColor,
             ctx,
             fillColor,
           });
-        }
-        else if (shape.type === 'line') {
+        } else if (shape.type === 'line') {
           drawLine({
             x: shape.x,
             y: shape.y,
@@ -70,28 +123,48 @@ export default function CanvasPage() {
             color: strokeColor,
             ctx,
           });
+        } else if (shape.type === 'text') {
+          drawText({
+            x: shape.x,
+            y: shape.y,
+            text: shape.text || 'Text',
+            color: strokeColor,
+            fontSize: shape.fontSize || 20,
+            fontFamily: shape.fontFamily || 'Arial',
+            ctx,
+          });
         }
       });
     };
+  // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
+  useEffect(() => {
+  // Resize canvas to fit window  -------------------------------------------------------------------------------------------------------------------------------------------------
+    const resizeCanvas = () => {
+      setCanvasSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+  // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+  
+  // Initialize canvas and context -------------------------------------------------------------------------------------------------------------------------------------------------
+    const canvas = canvaRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let isDrawing = false;
+    let startX = 0;
+    let startY = 0;
+  // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+  
+  // Handle down event for mouse ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
     const handleMouseDown = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       startX = e.clientX - rect.left;
       startY = e.clientY - rect.top;
-      isDrawing = true;
-    };
-
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDrawing) return;
-      
-
-      const rect = canvas.getBoundingClientRect();
-      const currentX = e.clientX - rect.left;
-      const currentY = e.clientY - rect.top;
-      const width = currentX - startX;
-      const height = currentY - startY;
-
+      isDrawing = true;   
       if (selectedTool === 'eraser') {
         const shapeToDelete = shapes.current.find((shape) => {
           if (shape.type === 'rectangle') {
@@ -114,7 +187,6 @@ export default function CanvasPage() {
             const maxX = Math.max(shape.x, shape.w);
             const minY = Math.min(shape.y, shape.h);
             const maxY = Math.max(shape.y, shape.h);
-    
             return (
               startX >= minX &&
               startX <= maxX &&
@@ -124,14 +196,72 @@ export default function CanvasPage() {
           }
           return false;
         });
-    
-        
+
         if (shapeToDelete) {
           shapes.current = shapes.current.filter((shape) => shape.id !== shapeToDelete.id);
           drawAllShapes();
         }
+        isDrawing = false;
       }
+    };
+  // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+  
+  // Handle move event for mouse  -------------------------------------------------------------------------------------------------------------------------------------------------
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDrawing) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const currentX = e.clientX - rect.left;
+      const currentY = e.clientY - rect.top;
+      const width = currentX - startX;
+      const height = currentY - startY;
+      
+      console.log('currentX:', currentX, 'currentY:', currentY, 'width:', width, 'height:', height);
+      console.log("Selected Tool:", selectedTool);
       drawAllShapes();
+
+      if (selectedTool === 'text') {
+        const clickedText = shapes.current.find((shape) => {
+          return (
+            shape.type === 'text' &&
+            startX >= shape.x &&
+            startX <= shape.x + (shape.w || 0) &&
+            startY >= shape.y - (shape.h || 20) &&
+            startY <= shape.y
+          );
+        });
+      console.log('Clicked Text:', clickedText);
+        if (clickedText) {
+          setEditingText({
+            id: clickedText.id,
+            text: clickedText.text || '',
+            x: clickedText.x,
+            y: clickedText.y,
+          });
+      
+          drawAllShapes();
+      
+          setTimeout(() => {
+            textInputRef.current?.focus();
+          }, 10);
+      
+          return;
+        }
+      
+        setEditingText({ 
+          id: Date.now().toString(), 
+          text: '', 
+          x: startX, 
+          y: startY 
+        });
+      
+        setTimeout(() => {
+          textInputRef.current?.focus();
+        }, 10);
+      
+        isDrawing = false;
+        return;
+      }
 
       if (selectedTool === 'rectangle') {
         drawRectangle({
@@ -152,9 +282,7 @@ export default function CanvasPage() {
           ctx,
           fillColor,
         });
-      }
-
-      else if (selectedTool === 'line') {
+      } else if (selectedTool === 'line') {
         drawLine({
           x: startX,
           y: startY,
@@ -165,9 +293,12 @@ export default function CanvasPage() {
         });
       }
     };
-
+  // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+    
+  // Handle up event for mouse ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
     const handleMouseUp = (e: MouseEvent) => {
       if (!isDrawing) return;
+      if (selectedTool === 'text' || selectedTool === 'eraser') return;
 
       const rect = canvas.getBoundingClientRect();
       const currentX = e.clientX - rect.left;
@@ -175,27 +306,31 @@ export default function CanvasPage() {
       const width = currentX - startX;
       const height = currentY - startY;
 
+
+      
+
       const newShape: Shape = {
         id: Date.now().toString(),
         type: selectedTool,
         x: startX,
         y: startY,
-        w: width,
-        h: height,
+        w: selectedTool === 'line' ? currentX : width,
+        h: selectedTool === 'line' ? currentY : height,
         ...(selectedTool === 'circle' && { radius: Math.abs(width) / 2 }),
-        ...(selectedTool === 'line' && { w: currentX, h: currentY }),
       };
 
       shapes.current.push(newShape);
       drawAllShapes();
       isDrawing = false;
     };
+  // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
     canvas.addEventListener("mousedown", handleMouseDown);
     canvas.addEventListener("mousemove", handleMouseMove);
     canvas.addEventListener("mouseup", handleMouseUp);
 
     return () => {
+      window.removeEventListener('resize', resizeCanvas);
       canvas.removeEventListener("mousedown", handleMouseDown);
       canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("mouseup", handleMouseUp);
@@ -210,6 +345,30 @@ export default function CanvasPage() {
         width={canvasSize.width}
         height={canvasSize.height}
       />
+
+      {editingText && (
+        <input
+        ref={textInputRef}
+        type="text"
+        value={editingText.text}
+        className="absolute bg-transparent  outline-none text-white z-20 caret-white p-1"
+        style={{
+          left: `${editingText.x}px`,
+          top: `${editingText.y}px`,
+          fontSize: '20px',
+          fontFamily: 'Arial',
+          minWidth: '150px',   
+        }}
+        onChange={(e) => {
+          setEditingText({ ...editingText, text: e.target.value });
+        }}
+        onBlur={handleTextComplete}
+        onKeyDown={handleTextKeyDown}
+        autoFocus
+      />
+      
+      )}
+
       <CanvaToolbar
         selectedTool={selectedTool}
         undo={() => {}}
