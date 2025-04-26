@@ -29,6 +29,7 @@ type Shape = {
 export default function CanvasPage() {
   const canvaRef = useRef<HTMLCanvasElement | null>(null);
   const shapes = useRef<Shape[]>([]);
+  const tempShapes = useRef<Shape[]>([]);
 
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [selectedTool, setSelectedTool] = useState<Shape["type"]>('rectangle');
@@ -45,8 +46,31 @@ export default function CanvasPage() {
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
   const textInputRef = useRef<HTMLInputElement | null>(null);
     const strokeColorRef = useRef<string>(strokeColor);
+ 
   
-  const fillColor = undefined;  
+  const fillColor = undefined;
+  
+  const handleUndo = () =>{
+    if(shapes.current.length >0){
+      const lastShape = shapes.current.pop();
+      if(lastShape){
+        tempShapes.current.push(lastShape);
+        drawAllShapes();
+        console.log('Undo:', lastShape);
+      }
+    }
+  }
+
+  const handleRedo = () =>{
+    if(tempShapes.current.length >0){
+      const lastShape = tempShapes.current.pop();
+      if(lastShape){
+        shapes.current.push(lastShape);
+        drawAllShapes();
+        console.log('Redo:', lastShape);
+      }
+    }
+  }
 
   // Handle text input completion ------------ -------------------------------------------------------------------------------------------------------------------------------------------------
   const handleTextComplete = () => {
@@ -215,7 +239,6 @@ export default function CanvasPage() {
       const height = currentY - startY;
       
       console.log('currentX:', currentX, 'currentY:', currentY, 'width:', width, 'height:', height);
-
       drawAllShapes();
 
       if (selectedTool === 'text') {
@@ -237,6 +260,8 @@ export default function CanvasPage() {
             y: clickedText.y,
             color: strokeColorRef.current,
           });
+
+          tempShapes.current = [];
       
           drawAllShapes();
       
@@ -329,6 +354,9 @@ export default function CanvasPage() {
         color: strokeColorRef.current,
       };
 
+      if(newShape) {
+        tempShapes.current = [];
+      }
       shapes.current.push(newShape);
       drawAllShapes();
       isDrawing = false;
@@ -389,8 +417,8 @@ export default function CanvasPage() {
 
       <CanvaToolbar
         selectedTool={selectedTool}
-        undo={() => {}}
-        redo={() => {}}
+        undo={handleUndo}
+        redo={handleRedo}
         clear={() => {
           shapes.current = [];
           const canvas = canvaRef.current;
