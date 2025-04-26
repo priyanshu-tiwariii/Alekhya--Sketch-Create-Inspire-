@@ -60,7 +60,7 @@ export const CanvaToolbar = ({
   setSelectedColor,
 }: Props) => {
   const [colorDropdownOpen, setColorDropdownOpen] = useState(false);
-  const [selectedColor, updateSelectedColor] = useState(colors[1]?.value || "#ffffff");
+  const [selectedColor, updateSelectedColor] = useState(colors[0]?.value || "#ffffff");
 
   const handleClick = (toolName: string) => {
     switch (toolName) {

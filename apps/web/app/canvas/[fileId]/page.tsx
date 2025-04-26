@@ -1,12 +1,15 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
+import imagePng from "../../../images/image.png";
+
 import { CanvaToolbar } from '../../../components/CanvaToolbar';
 import { drawRectangle } from '../../../components/CanvasTools/drawRectangle';
 import { drawCircle } from '../../../components/CanvasTools/drawCircle';
 import { drawLine } from '../../../components/CanvasTools/drawLine';
 import { drawText } from '../../../components/CanvasTools/writeText';
 import { drawArrowLine } from '../../../components/CanvasTools/drawArrowLine';
+import { eraser } from '../../../components/CanvasTools/eraser';
 
 type Shape = {
   id: string;
@@ -187,58 +190,10 @@ export default function CanvasPage() {
       const rect = canvas.getBoundingClientRect();
       startX = e.clientX - rect.left;
       startY = e.clientY - rect.top;
-      isDrawing = true;   
+      isDrawing = true; 
+      
       if (selectedTool === 'eraser') {
-        const shapeToDelete = shapes.current.find((shape) => {
-          if (shape.type === 'rectangle') {
-            return (
-              startX >= shape.x &&
-              startX <= shape.x + shape.w &&
-              startY >= shape.y &&
-              startY <= shape.y + shape.h
-            );
-          } else if (shape.type === 'circle') {
-            const radius = shape.radius || Math.abs(shape.w) / 2;
-            const centerX = shape.x + shape.w / 2;
-            const centerY = shape.y + shape.h / 2;
-            const distance = Math.sqrt(
-              Math.pow(startX - centerX, 2) + Math.pow(startY - centerY, 2)
-            );
-            return distance <= radius;
-          } else if (shape.type === 'line') {
-            const minX = Math.min(shape.x, shape.w);
-            const maxX = Math.max(shape.x, shape.w);
-            const minY = Math.min(shape.y, shape.h);
-            const maxY = Math.max(shape.y, shape.h);
-            return (
-              startX >= minX &&
-              startX <= maxX &&
-              startY >= minY &&
-              startY <= maxY
-            );
-          }
-          else if (shape.type === 'arrow'){
-            const minX = Math.min(shape.x, shape.w);
-            const maxX = Math.max(shape.x, shape.w);
-            const minY = Math.min(shape.y, shape.h);
-            const maxY = Math.max(shape.y, shape.h);
-            return (
-              startX >= minX &&
-              startX <= maxX &&
-              startY >= minY &&
-              startY <= maxY
-            );
-          }
-          else if(shape.type === 'text'){
-            return (
-              startX >= shape.x &&
-              startX <= shape.x + (shape.w || 0) &&
-              startY >= shape.y - (shape.h || 20) &&
-              startY <= shape.y
-            );
-          }
-          return false;
-        });
+        const shapeToDelete = eraser({shapes: shapes.current,startX,startY,})
 
         if (shapeToDelete) {
           shapes.current = shapes.current.filter((shape) => shape.id !== shapeToDelete.id);
@@ -260,7 +215,7 @@ export default function CanvasPage() {
       const height = currentY - startY;
       
       console.log('currentX:', currentX, 'currentY:', currentY, 'width:', width, 'height:', height);
-      console.log("Selected Tool:", selectedTool);
+
       drawAllShapes();
 
       if (selectedTool === 'text') {
@@ -360,6 +315,9 @@ export default function CanvasPage() {
       const currentY = e.clientY - rect.top;
       const width = currentX - startX;
       const height = currentY - startY;
+
+      console.log('Mouse Up:', { currentX, currentY, width, height });
+
       const newShape: Shape = {
         id: Date.now().toString(),
         type: selectedTool,
@@ -394,8 +352,14 @@ export default function CanvasPage() {
       <canvas
         ref={canvaRef}
         className="absolute top-0 left-0 cursor-crosshair z-10 bg-black"
+        style={{
+          cursor : selectedTool === 'text' ? 'text' : selectedTool=== 'eraser' ?  'pointer' : 'crosshair',
+        }}
         width={canvasSize.width}
         height={canvasSize.height}
+        onDoubleClick={(e)=>{
+          setSelectedTool('text');
+        }}
       />
 
       {editingText && (
