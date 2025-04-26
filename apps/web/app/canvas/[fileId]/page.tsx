@@ -6,6 +6,7 @@ import { drawRectangle } from '../../../components/CanvasTools/drawRectangle';
 import { drawCircle } from '../../../components/CanvasTools/drawCircle';
 import { drawLine } from '../../../components/CanvasTools/drawLine';
 import { drawText } from '../../../components/CanvasTools/writeText';
+import { drawArrowLine } from '../../../components/CanvasTools/drawArrowLine';
 
 type Shape = {
   id: string;
@@ -128,7 +129,19 @@ export default function CanvasPage() {
             color: shape.color,
             ctx,
           });
-        } else if (shape.type === 'text') {
+        }
+        else if (shape.type === 'arrow') {
+          drawArrowLine({
+            startX : shape.x,
+            startY : shape.y,
+            endX : shape.w,
+            endY : shape.h,
+            color: shape.color,
+            ctx,
+            fillColor,
+          }) 
+        }
+        else if (shape.type === 'text') {
           drawText({
             x: shape.x,
             y: shape.y,
@@ -193,6 +206,18 @@ export default function CanvasPage() {
             );
             return distance <= radius;
           } else if (shape.type === 'line') {
+            const minX = Math.min(shape.x, shape.w);
+            const maxX = Math.max(shape.x, shape.w);
+            const minY = Math.min(shape.y, shape.h);
+            const maxY = Math.max(shape.y, shape.h);
+            return (
+              startX >= minX &&
+              startX <= maxX &&
+              startY >= minY &&
+              startY <= maxY
+            );
+          }
+          else if (shape.type === 'arrow'){
             const minX = Math.min(shape.x, shape.w);
             const maxX = Math.max(shape.x, shape.w);
             const minY = Math.min(shape.y, shape.h);
@@ -311,6 +336,16 @@ export default function CanvasPage() {
           color: strokeColorRef.current,
           ctx,
         });
+      }else if (selectedTool === 'arrow') {
+        drawArrowLine({
+          startX: startX,
+          startY: startY,
+          endX: currentX,
+          endY: currentY,
+          color: strokeColorRef.current,
+          ctx,
+          fillColor,
+        });
       }
     };
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -330,8 +365,8 @@ export default function CanvasPage() {
         type: selectedTool,
         x: startX,
         y: startY,
-        w: selectedTool === 'line' ? currentX : width,
-        h: selectedTool === 'line' ? currentY : height,
+        w: selectedTool === 'line' || selectedTool === 'arrow' ? currentX : width,
+        h: selectedTool === 'line'|| selectedTool === 'arrow' ? currentY : height,
         ...(selectedTool === 'circle' && { radius: Math.abs(width) / 2 }),
         color: strokeColorRef.current,
       };
