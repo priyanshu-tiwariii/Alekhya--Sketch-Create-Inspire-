@@ -204,6 +204,14 @@ export default function CanvasPage() {
               startY <= maxY
             );
           }
+          else if(shape.type === 'text'){
+            return (
+              startX >= shape.x &&
+              startX <= shape.x + (shape.w || 0) &&
+              startY >= shape.y - (shape.h || 20) &&
+              startY <= shape.y
+            );
+          }
           return false;
         });
 
