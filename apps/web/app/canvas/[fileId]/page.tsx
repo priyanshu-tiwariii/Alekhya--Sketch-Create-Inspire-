@@ -18,7 +18,9 @@ type Shape = {
   text?: string;
   fontSize?: number;
   fontFamily?: string;
+  color?: string;
 };
+
 
 export default function CanvasPage() {
   const canvaRef = useRef<HTMLCanvasElement | null>(null);
@@ -26,6 +28,7 @@ export default function CanvasPage() {
 
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [selectedTool, setSelectedTool] = useState<Shape["type"]>('rectangle');
+  const [strokeColor, setstrokeColor] = useState("#ffffff");
 
   // Text Editing State -------------------------------------------------------------------------------------------------------------------------------------------------
     const [editingText, setEditingText] = useState<{
@@ -33,11 +36,12 @@ export default function CanvasPage() {
       text: string;
       x: number;
       y: number;
+      color: string;
     } | null>(null);
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
   const textInputRef = useRef<HTMLInputElement | null>(null);
-
-  const strokeColor = 'white';
+    const strokeColorRef = useRef<string>(strokeColor);
+  
   const fillColor = undefined;  
 
   // Handle text input completion ------------ -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -66,6 +70,7 @@ export default function CanvasPage() {
       text: editingText.text,
       fontSize: 20,
       fontFamily: 'Arial',
+      color: strokeColor,
     };
   
     shapes.current.push(newTextShape);
@@ -101,7 +106,7 @@ export default function CanvasPage() {
             y: shape.y,
             w: shape.w,
             h: shape.h,
-            color: strokeColor,
+            color: shape.color ,
             ctx,
             fillColor,
           });
@@ -110,7 +115,7 @@ export default function CanvasPage() {
             x: shape.x + shape.w / 2,
             y: shape.y + shape.h / 2,
             radius: shape.radius || Math.abs(shape.w) / 2,
-            color: strokeColor,
+            color: shape.color ,
             ctx,
             fillColor,
           });
@@ -120,7 +125,7 @@ export default function CanvasPage() {
             y: shape.y,
             w: shape.w,
             h: shape.h,
-            color: strokeColor,
+            color: shape.color,
             ctx,
           });
         } else if (shape.type === 'text') {
@@ -128,7 +133,7 @@ export default function CanvasPage() {
             x: shape.x,
             y: shape.y,
             text: shape.text || 'Text',
-            color: strokeColor,
+            color: shape.color || strokeColor,
             fontSize: shape.fontSize || 20,
             fontFamily: shape.fontFamily || 'Arial',
             ctx,
@@ -138,6 +143,11 @@ export default function CanvasPage() {
     };
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
+  //Color Picker  -------------------------------------------------------------------------------------------------------------------------------------------------
+    useEffect(() => {
+      strokeColorRef.current = strokeColor;
+    }, [strokeColor]);
+  // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
   useEffect(() => {
   // Resize canvas to fit window  -------------------------------------------------------------------------------------------------------------------------------------------------
     const resizeCanvas = () => {
@@ -237,6 +247,7 @@ export default function CanvasPage() {
             text: clickedText.text || '',
             x: clickedText.x,
             y: clickedText.y,
+            color: strokeColorRef.current,
           });
       
           drawAllShapes();
@@ -252,7 +263,8 @@ export default function CanvasPage() {
           id: Date.now().toString(), 
           text: '', 
           x: startX, 
-          y: startY 
+          y: startY ,
+          color: strokeColorRef.current,
         });
       
         setTimeout(() => {
@@ -269,7 +281,7 @@ export default function CanvasPage() {
           y: startY,
           w: width,
           h: height,
-          color: strokeColor,
+          color: strokeColorRef.current,
           ctx,
           fillColor,
         });
@@ -278,7 +290,7 @@ export default function CanvasPage() {
           x: startX + width / 2,
           y: startY + height / 2,
           radius: Math.abs(width) / 2,
-          color: strokeColor,
+          color: strokeColorRef.current,
           ctx,
           fillColor,
         });
@@ -288,7 +300,7 @@ export default function CanvasPage() {
           y: startY,
           w: currentX,
           h: currentY,
-          color: strokeColor,
+          color: strokeColorRef.current,
           ctx,
         });
       }
@@ -305,10 +317,6 @@ export default function CanvasPage() {
       const currentY = e.clientY - rect.top;
       const width = currentX - startX;
       const height = currentY - startY;
-
-
-      
-
       const newShape: Shape = {
         id: Date.now().toString(),
         type: selectedTool,
@@ -317,6 +325,7 @@ export default function CanvasPage() {
         w: selectedTool === 'line' ? currentX : width,
         h: selectedTool === 'line' ? currentY : height,
         ...(selectedTool === 'circle' && { radius: Math.abs(width) / 2 }),
+        color: strokeColorRef.current,
       };
 
       shapes.current.push(newShape);
@@ -351,13 +360,15 @@ export default function CanvasPage() {
         ref={textInputRef}
         type="text"
         value={editingText.text}
-        className="absolute bg-transparent  outline-none text-white z-20 caret-white p-1"
+        className={`absolute bg-transparent outline-none  z-20   p-1`}
         style={{
           left: `${editingText.x}px`,
           top: `${editingText.y}px`,
           fontSize: '20px',
           fontFamily: 'Arial',
-          minWidth: '150px',   
+          minWidth: '150px',
+          color: strokeColorRef.current,       
+       caretColor: strokeColorRef.current,   
         }}
         onChange={(e) => {
           setEditingText({ ...editingText, text: e.target.value });
@@ -382,6 +393,7 @@ export default function CanvasPage() {
           }
         }}
         setSelectedTool={(tool) => setSelectedTool(tool as Shape["type"])}
+        setSelectedColor={setstrokeColor}
       />
     </div>
   );

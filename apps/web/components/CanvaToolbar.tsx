@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   RectangleHorizontal,
   Circle,
@@ -11,8 +11,8 @@ import {
   Redo,
   Type,
   Trash,
+  ChevronDown,
 } from "lucide-react";
-
 
 const primaryGradient = "from-[#ff9966] to-[#ff5e62]";
 type canvaShape = "rectangle" | "circle" | "line" | "arrow" | "text" | "eraser";
@@ -22,7 +22,8 @@ type Props = {
   undo: () => void;
   redo: () => void;
   clear: () => void;
-  setSelectedTool: ( tool: canvaShape ) => void;
+  setSelectedTool: (tool: canvaShape) => void;
+  setSelectedColor: (color: string) => void;  
 };
 
 const tools = [
@@ -40,13 +41,27 @@ const actions = [
   { name: "trash", icon: Trash },
 ];
 
+const colors = [
+    { name: "White", value: "#ffffff" },
+    { name: "Red", value: "#ff4d4f" },
+    { name: "Blue", value: "#4a90e2" },
+    { name: "Green", value: "#00c853" },
+    { name: "Yellow", value: "#ffeb3b" },
+    { name: "Purple", value: "#a855f7" },
+    { name: "Orange", value: "#fb923c" },
+  ];
+  
 export const CanvaToolbar = ({
   selectedTool,
   undo,
   redo,
   clear,
   setSelectedTool,
+  setSelectedColor,
 }: Props) => {
+  const [colorDropdownOpen, setColorDropdownOpen] = useState(false);
+  const [selectedColor, updateSelectedColor] = useState(colors[1]?.value || "#ffffff");
+
   const handleClick = (toolName: string) => {
     switch (toolName) {
       case "undo":
@@ -62,6 +77,12 @@ export const CanvaToolbar = ({
         setSelectedTool(toolName as canvaShape);
         break;
     }
+  };
+
+  const handleColorSelect = (color: string) => {
+    updateSelectedColor(color);
+    setSelectedColor(color);
+    setColorDropdownOpen(false);
   };
 
   return (
@@ -81,8 +102,6 @@ export const CanvaToolbar = ({
                   ? `bg-orange-500 text-gray-50 ring-2 ring-offset-2 ring-offset-black ring-[--tw-ring-color]`
                   : "text-gray-50 hover:bg-white/10"
               }`}
-              
-              
             >
               <Icon size={24} strokeWidth={1.8} />
               <span className="absolute bottom-[-1.6rem] left-1/2 -translate-x-1/2 text-[10px] text-gray-50 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -91,6 +110,38 @@ export const CanvaToolbar = ({
             </button>
           );
         })}
+      </div>
+
+      {/* Color Picker */}
+      <div className="relative">
+        <button
+          onClick={() => setColorDropdownOpen((prev) => !prev)}
+          className="flex items-center gap-2 p-2 rounded-lg text-gray-50 hover:bg-white/10 transition-all duration-150"
+        >
+          <div
+            className="w-5 h-5 rounded-full"
+            style={{ backgroundColor: selectedColor }}
+          />
+          <ChevronDown size={16} />
+        </button>
+
+        {colorDropdownOpen && (
+          <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md rounded-lg shadow-lg p-2 flex flex-col gap-2 z-10">
+            {colors.map((color) => (
+              <button
+                key={color.name}
+                onClick={() => handleColorSelect(color.value)}
+                className="flex items-center gap-2 p-1 hover:bg-white/10 rounded-md"
+              >
+                <div
+                  className="w-4 h-4 rounded-full"
+                  style={{ backgroundColor: color.value }}
+                />
+                <span className="text-xs text-white">{color.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Action Tools */}
