@@ -13,9 +13,12 @@ import {
   Trash,
   ChevronDown,
   Hand,
+  Save,
+  Share2,
 } from "lucide-react";
 
 const primaryGradient = "from-[#ff9966] to-[#ff5e62]";
+
 type canvaShape = "rectangle" | "circle" | "line" | "arrow" | "text" | "eraser" | "hand";
 
 type Props = {
@@ -24,7 +27,7 @@ type Props = {
   redo: () => void;
   clear: () => void;
   setSelectedTool: (tool: canvaShape) => void;
-  setSelectedColor: (color: string) => void;  
+  setSelectedColor: (color: string) => void;
 };
 
 const tools = [
@@ -44,15 +47,25 @@ const actions = [
 ];
 
 const colors = [
-    { name: "White", value: "#ffffff" },
-    { name: "Red", value: "#ff4d4f" },
-    { name: "Blue", value: "#4a90e2" },
-    { name: "Green", value: "#00c853" },
-    { name: "Yellow", value: "#ffeb3b" },
-    { name: "Purple", value: "#a855f7" },
-    { name: "Orange", value: "#fb923c" },
-  ];
-  
+  { name: "White", value: "#ffffff" },
+  { name: "Red", value: "#ff4d4f" },
+  { name: "Blue", value: "#4a90e2" },
+  { name: "Green", value: "#00c853" },
+  { name: "Yellow", value: "#ffeb3b" },
+  { name: "Purple", value: "#a855f7" },
+  { name: "Orange", value: "#fb923c" },
+];
+
+const fontSizes = ["12px", "16px", "20px", "24px", "32px"];
+const fontWeights = ["normal", "bold", "bolder", "lighter"];
+const fontStyles = ["normal", "italic", "oblique"];
+const fontFamilies = [
+  { name: "Sans-serif", value: "sans-serif" },
+  { name: "Serif", value: "serif" },
+  { name: "Monospace", value: "monospace" },
+  { name: "Rough", value: "'Shadows Into Light', cursive" },
+];
+
 export const CanvaToolbar = ({
   selectedTool,
   undo,
@@ -63,6 +76,11 @@ export const CanvaToolbar = ({
 }: Props) => {
   const [colorDropdownOpen, setColorDropdownOpen] = useState(false);
   const [selectedColor, updateSelectedColor] = useState(colors[0]?.value || "#ffffff");
+
+  const [fontSize, setFontSize] = useState("16px");
+  const [fontWeight, setFontWeight] = useState("normal");
+  const [fontStyle, setFontStyle] = useState("normal");
+  const [fontFamily, setFontFamily] = useState("sans-serif");
 
   const handleClick = (toolName: string) => {
     switch (toolName) {
@@ -88,87 +106,156 @@ export const CanvaToolbar = ({
   };
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-white/10 backdrop-blur-lg px-4 py-2 rounded-xl border border-white/20 shadow-lg flex items-center gap-4">
-      {/* Drawing Tools */}
-      <div className="flex items-center gap-2 pr-3 border-r border-white/10">
-        {tools.map((tool) => {
-          const Icon = tool.icon;
-          const isSelected = selectedTool === tool.name;
+    <>
+      
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-white/20 backdrop-blur-md px-6 py-1 rounded-xl border border-white/30 shadow-2xl flex items-center gap-6 min-w-fit">
+        
+        {/* Left - Tools */}
+        <div className="flex items-center gap-3 pr-4 border-r border-white/20">
+          {tools.map((tool) => {
+            const Icon = tool.icon;
+            const isSelected = selectedTool === tool.name;
 
-          return (
-            <button
-              key={tool.name}
-              onClick={() => handleClick(tool.name)}
-              className={`p-2 rounded-lg transition-all duration-150 relative group ${
-                isSelected
-                  ? `bg-orange-500 text-gray-50 ring-2 ring-offset-2 ring-offset-black ring-[--tw-ring-color] ${
-                      tool.name === "hand" ? "cursor-grab active:cursor-grabbing" : ""
-                    }`
-                  : "text-gray-50 hover:bg-white/10"
-              }`}
-              style={{
-                cursor: tool.name === "hand" ? "grab" : "default",
-              }}
-            >
-              <Icon size={24} strokeWidth={1.8} />
-              <span className="absolute bottom-[-1.6rem] left-1/2 -translate-x-1/2 text-[10px] text-gray-50 opacity-0 group-hover:opacity-100 transition-opacity">
-                {tool.name}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Color Picker */}
-      <div className="relative">
-        <button
-          onClick={() => setColorDropdownOpen((prev) => !prev)}
-          className="flex items-center gap-2 p-2 rounded-lg text-gray-50 hover:bg-white/10 transition-all duration-150"
-        >
-          <div
-            className="w-5 h-5 rounded-full"
-            style={{ backgroundColor: selectedColor }}
-          />
-          <ChevronDown size={16} />
-        </button>
-
-        {colorDropdownOpen && (
-          <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md rounded-lg shadow-lg p-2 flex flex-col gap-2 z-10">
-            {colors.map((color) => (
+            return (
               <button
-                key={color.name}
-                onClick={() => handleColorSelect(color.value)}
-                className="flex items-center gap-2 p-1 hover:bg-white/10 rounded-md"
+                key={tool.name}
+                onClick={() => handleClick(tool.name)}
+                className={`p-2 rounded-lg transition-all duration-150 relative group ${
+                  isSelected
+                    ? "bg-orange-500 text-white font-extrabold p-"
+                    : "text-gray-100 hover:bg-white/10"
+                }`}
+                style={{
+                  cursor: tool.name === "hand" ? "grab" : "pointer",
+                }}
               >
-                <div
-                  className="w-4 h-4 rounded-full"
-                  style={{ backgroundColor: color.value }}
-                />
-                <span className="text-xs text-white">{color.name}</span>
+                <Icon size={16} strokeWidth={1} />
+                <span className="absolute bottom-[-1.8rem] left-1/2 -translate-x-1/2 text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  {tool.name}
+                </span>
               </button>
-            ))}
+            );
+          })}
+        </div>
+
+        {/* Color Picker */}
+        <div className="relative">
+          <button
+            onClick={() => setColorDropdownOpen((prev) => !prev)}
+            className="flex items-center gap-2 p-2 rounded-lg text-white hover:bg-white/10 transition-all duration-150"
+          >
+            <div
+              className="w-5 h-5 rounded-full"
+              style={{ backgroundColor: selectedColor }}
+            />
+            <ChevronDown size={16} />
+          </button>
+
+          {colorDropdownOpen && (
+            <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-white/30 backdrop-blur-md rounded-lg shadow-lg p-2 flex flex-col gap-2 z-10">
+              {colors.map((color) => (
+                <button
+                  key={color.name}
+                  onClick={() => handleColorSelect(color.value)}
+                  className="flex items-center gap-2 p-1 hover:bg-white/10 rounded-md"
+                >
+                  <div
+                    className="w-4 h-4 rounded-full"
+                    style={{ backgroundColor: color.value }}
+                  />
+                  <span className="text-xs text-white">{color.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Font Options - Only when Text Tool is Selected */}
+        {selectedTool === "text" && (
+          <div className="flex items-center gap-4 border-l border-white/20 pl-4">
+            <select
+              value={fontSize}
+              onChange={(e) => setFontSize(e.target.value)}
+              className="bg-transparent text-white text-sm"
+            >
+              {fontSizes.map((size) => (
+                <option key={size} value={size} className="bg-black text-white">
+                  {size}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={fontWeight}
+              onChange={(e) => setFontWeight(e.target.value)}
+              className="bg-transparent text-white text-sm"
+            >
+              {fontWeights.map((weight) => (
+                <option key={weight} value={weight} className="bg-black text-white">
+                  {weight}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={fontStyle}
+              onChange={(e) => setFontStyle(e.target.value)}
+              className="bg-transparent text-white text-sm"
+            >
+              {fontStyles.map((style) => (
+                <option key={style} value={style} className="bg-black text-white">
+                  {style}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={fontFamily}
+              onChange={(e) => setFontFamily(e.target.value)}
+              className="bg-transparent text-white text-sm"
+            >
+              {fontFamilies.map((font) => (
+                <option key={font.name} value={font.value} className="bg-black text-white">
+                  {font.name}
+                </option>
+              ))}
+            </select>
           </div>
         )}
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3 px- border-l border-white/20 pl-4">
+          {actions.map((tool) => {
+            const Icon = tool.icon;
+            return (
+              <button
+                key={tool.name}
+                onClick={() => handleClick(tool.name)}
+                className="p-2 rounded-lg text-white hover:bg-white/10 transition-all duration-150 relative group"
+              >
+                <Icon size={16} strokeWidth={1} />
+                <span className="absolute bottom-[-1.8rem] left-1/2 -translate-x-1/2 text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  {tool.name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Action Tools */}
-      <div className="flex items-center gap-2 pl-3">
-        {actions.map((tool) => {
-          const Icon = tool.icon;
-          return (
-            <button
-              key={tool.name}
-              onClick={() => handleClick(tool.name)}
-              className="p-2 rounded-lg text-gray-50 hover:bg-white/10 transition-all duration-150 relative group"
-            >
-              <Icon size={24} strokeWidth={1.8} />
-              <span className="absolute bottom-[-1.6rem] left-1/2 -translate-x-1/2 text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                {tool.name}
-              </span>
-            </button>
-          );
-        })}
+      {/* Save and Share (separated at top right) */}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
+      <button className="p-2 rounded-xl border border-white/30 shadow-2xl text-white hover:bg-white/30 transition-all duration-150 flex items-center gap-1 bg-white/20 backdrop-blur-md">
+          <Share2 size={16} />
+          <span className="text-sm hidden md:inline">Share</span>
+        </button>
+        <button className="p-2   text-white rounded-xl border border-white/30 shadow-2xl bg-orange-500 hover:bg-orange-600 transition-all duration-150 flex items-center gap-1  backdrop-blur-md">
+          <Save size={16}  />
+          <span className="text-sm hidden md:inline">Save</span>
+        </button>
+
+       
       </div>
-    </div>
+    </>
   );
 };

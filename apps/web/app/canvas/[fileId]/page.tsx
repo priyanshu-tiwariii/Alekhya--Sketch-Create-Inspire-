@@ -424,7 +424,7 @@ export default function CanvasPage() {
         }}
       />
       {/* Zoom Controls Container */}
-      <div className="fixed bottom-4 right-4 bg-gray-700 backdrop-blur-sm rounded-lg p-2 flex items-center gap-2 z-20 shadow-lg">
+      <div className="fixed bottom-4 right-4 bg-white/20 backdrop-blur-sm rounded-xl p-2 flex items-center gap-2 z-20 shadow-lg">
       <button onClick={()=>{
         setViewPortTransform(prev =>({
           ...prev,
@@ -432,7 +432,7 @@ export default function CanvasPage() {
         }));
         handleDrawAllShapes();
       }}
-      className="p-2 rounded hover:bg-gray-800"
+      className="p-2 rounded hover:bg-white/30"
       title="Zoom Out"
       >
         <Minus />
@@ -447,7 +447,7 @@ export default function CanvasPage() {
         }));
         handleDrawAllShapes();
       }}
-      className="p-2 rounded hover:bg-gray-800"
+      className="p-2 rounded hover:bg-white/30"
       title="Zoom Out"
       >
         <Plus />
@@ -461,7 +461,7 @@ export default function CanvasPage() {
         });
         handleDrawAllShapes();
       }}
-      className="p-2 rounded hover:bg-gray-800 text-sm"
+      className="p-2 rounded hover:bg-orange-500 text-sm"
       title="Reset Zoom"
     >
       Reset
