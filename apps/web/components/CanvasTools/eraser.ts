@@ -1,4 +1,4 @@
-import { Shape } from "../../Types/shape.types";
+import { Shape } from "../../types/shape.types";
   
   export const eraser = ({ shapes, startX, startY }: { shapes: Shape[], startX: number, startY: number }) => {
     return shapes.find((shape: Shape) => {

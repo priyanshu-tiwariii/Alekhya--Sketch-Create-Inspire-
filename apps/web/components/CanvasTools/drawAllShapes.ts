@@ -4,7 +4,7 @@ import { drawRectangle } from "./drawRectangle";
 import { drawLine } from "./drawLine";
 import { drawText } from "./writeText";
 import { drawArrowLine } from "./drawArrowLine";
-import { Shape } from "../../Types/shape.types";
+import { Shape } from "../../types/shape.types";
 import { useRef } from "react";
 
 type Props = {

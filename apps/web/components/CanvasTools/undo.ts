@@ -1,5 +1,5 @@
 
-import { Shape } from "../../Types/shape.types";
+import { Shape } from "../../types/shape.types";
 type Props = {
     shapes: React.RefObject<Shape[]>;
     tempShapes: React.RefObject<Shape[]>;
