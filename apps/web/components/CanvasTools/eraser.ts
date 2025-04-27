@@ -1,16 +1,16 @@
 type Shape = {
-    id: string;
-    type: 'rectangle' | 'circle' | 'line' | 'arrow' | 'text' | 'eraser';
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-    radius?: number;
-    text?: string;
-    fontSize?: number;
-    fontFamily?: string;
-    color?: string;
-  };
+  id: string;
+  type: 'rectangle' | 'circle' | 'line' | 'arrow' | 'text' | 'eraser' | 'hand';
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  radius?: number;
+  text?: string;
+  fontSize?: number;
+  fontFamily?: string;
+  color?: string;
+};
   
   export const eraser = ({ shapes, startX, startY }: { shapes: Shape[], startX: number, startY: number }) => {
     return shapes.find((shape: Shape) => {

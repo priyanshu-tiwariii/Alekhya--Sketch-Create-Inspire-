@@ -13,7 +13,7 @@ import { eraser } from '../../../components/CanvasTools/eraser';
 
 type Shape = {
   id: string;
-  type: 'rectangle' | 'circle' | 'line' | 'arrow' | 'text' | 'eraser';
+  type: 'rectangle' | 'circle' | 'line' | 'arrow' | 'text' | 'eraser' | 'hand';
   x: number;
   y: number;
   w: number;
@@ -31,9 +31,34 @@ export default function CanvasPage() {
   const shapes = useRef<Shape[]>([]);
   const tempShapes = useRef<Shape[]>([]);
 
+
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [selectedTool, setSelectedTool] = useState<Shape["type"]>('rectangle');
   const [strokeColor, setstrokeColor] = useState("#ffffff");
+
+  //Panning and Zooming Sate --------------------------------------------------------------------------------------------------------------------------------------------
+  const [isPanning, setIsPanning] = useState(false);
+  const [lastPanPosition, setLastPanPosition] = useState<{ x: number; y: number } | null>(null);
+  const [viewPortTransform, setViewPortTransform] = useState({
+    scale: 1,
+    translateX: 0,
+    translateY: 0,
+  });
+  const screenToCanvas = (x: number, y: number) => {
+    return {
+      x: (x - viewPortTransform.translateX) / viewPortTransform.scale,
+      y: (y - viewPortTransform.translateY) / viewPortTransform.scale
+    };
+  };
+
+  // Convert canvas coordinates to screen coordinates
+  const canvasToScreen = (x: number, y: number) => {
+    return {
+      x: x * viewPortTransform.scale + viewPortTransform.translateX,
+      y: y * viewPortTransform.scale + viewPortTransform.translateY
+    };
+  };
+  // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
   // Text Editing State -------------------------------------------------------------------------------------------------------------------------------------------------
     const [editingText, setEditingText] = useState<{
@@ -127,6 +152,15 @@ export default function CanvasPage() {
       if (!ctx) return;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.setTransform(
+        viewPortTransform.scale, 
+        0, 
+        0, 
+        viewPortTransform.scale, 
+        viewPortTransform.translateX, 
+        viewPortTransform.translateY
+      )
       shapes.current.forEach((shape) => {
         if (shape.type === 'rectangle') {
           drawRectangle({
@@ -198,24 +232,66 @@ export default function CanvasPage() {
     window.addEventListener('resize', resizeCanvas);
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
   
+  //Spanning and Zooming  -------------------------------------------------------------------------------------------------------------------------------------------------
+    const handlePanStart = (e: MouseEvent) => {
+      if (e.button !== 0 || selectedTool !== 'hand') return;
+      setIsPanning(true);
+      setLastPanPosition({ x: e.clientX, y: e.clientY });
+      console.log("Panning started at", { x: e.clientX, y: e.clientY });
+      e.preventDefault();
+    }
+
+    const handlePanMove = (e:MouseEvent) =>{
+      if(!isPanning || !lastPanPosition || selectedTool !== 'hand') return;
+
+      const dx = e.clientX - lastPanPosition.x;
+      const dy = e.clientY - lastPanPosition.y;
+      console.log("Changes",{dx,dy});
+      setViewPortTransform((prev) => ({
+        ...prev,
+        translateX: prev.translateX + dx,
+        translateY: prev.translateY + dy,
+      }));
+
+      console.log("ViewPortTransform", viewPortTransform);
+      setLastPanPosition({ x: e.clientX, y: e.clientY });
+      drawAllShapes();
+      e.preventDefault();
+    }
+
+    const handlePanEnd = () => {
+      if(selectedTool !== 'hand') return;
+      setIsPanning(false);
+      console.log("Panning ended");
+    }
+
+
+  //----------------------------------------------------------------------------------------------------------------------------------------------------
+  
   // Initialize canvas and context -------------------------------------------------------------------------------------------------------------------------------------------------
     const canvas = canvaRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+
+
     let isDrawing = false;
     let startX = 0;
     let startY = 0;
+   
+
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
   
   // Handle down event for mouse ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
     const handleMouseDown = (e: MouseEvent) => {
+      if (selectedTool === 'hand') return;
       const rect = canvas.getBoundingClientRect();
-      startX = e.clientX - rect.left;
-      startY = e.clientY - rect.top;
+      const {x,y} = screenToCanvas(e.clientX-rect.left, e.clientY-rect.top);
+      startX = x
+      startY = y
       isDrawing = true; 
-      
+     
       if (selectedTool === 'eraser') {
         const shapeToDelete = eraser({shapes: shapes.current,startX,startY,})
 
@@ -233,8 +309,7 @@ export default function CanvasPage() {
       if (!isDrawing) return;
 
       const rect = canvas.getBoundingClientRect();
-      const currentX = e.clientX - rect.left;
-      const currentY = e.clientY - rect.top;
+    const{x: currentX, y: currentY} = screenToCanvas(e.clientX-rect.left, e.clientY-rect.top);
       const width = currentX - startX;
       const height = currentY - startY;
       
@@ -288,6 +363,19 @@ export default function CanvasPage() {
         return;
       }
 
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+    
+      ctx.setTransform(
+        viewPortTransform.scale, 
+        0, 
+        0, 
+        viewPortTransform.scale, 
+        viewPortTransform.translateX, 
+        viewPortTransform.translateY
+      );
+
       if (selectedTool === 'rectangle') {
         drawRectangle({
           x: startX,
@@ -336,8 +424,7 @@ export default function CanvasPage() {
       if (selectedTool === 'text' || selectedTool === 'eraser') return;
 
       const rect = canvas.getBoundingClientRect();
-      const currentX = e.clientX - rect.left;
-      const currentY = e.clientY - rect.top;
+      const {x: currentX, y: currentY} = screenToCanvas(e.clientX-rect.left, e.clientY-rect.top);
       const width = currentX - startX;
       const height = currentY - startY;
 
@@ -363,17 +450,27 @@ export default function CanvasPage() {
     };
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
+  canvas.addEventListener('mousedown', handlePanStart);
+  canvas.addEventListener('mousemove', handlePanMove);
+  canvas.addEventListener('mouseup', handlePanEnd);
+  canvas.addEventListener('mouseleave', handlePanEnd);
+
     canvas.addEventListener("mousedown", handleMouseDown);
     canvas.addEventListener("mousemove", handleMouseMove);
     canvas.addEventListener("mouseup", handleMouseUp);
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
+      canvas.removeEventListener('mousedown', handlePanStart);
+      canvas.removeEventListener('mousemove', handlePanMove);
+      canvas.removeEventListener('mouseup', handlePanEnd);
+      canvas.removeEventListener('mouseleave', handlePanEnd);
+
       canvas.removeEventListener("mousedown", handleMouseDown);
       canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [selectedTool]);
+  }, [selectedTool,isPanning,lastPanPosition]);
 
   return (
     <div>
@@ -381,7 +478,7 @@ export default function CanvasPage() {
         ref={canvaRef}
         className="absolute top-0 left-0 cursor-crosshair z-10 bg-black"
         style={{
-          cursor : selectedTool === 'text' ? 'text' : selectedTool=== 'eraser' ?  'pointer' : 'crosshair',
+          cursor : selectedTool === 'text' ? 'text' : selectedTool=== 'eraser' ?  'pointer' : selectedTool === 'hand' ? 'grab' : 'crosshair',
         }}
         width={canvasSize.width}
         height={canvasSize.height}
@@ -397,13 +494,15 @@ export default function CanvasPage() {
         value={editingText.text}
         className={`absolute bg-transparent outline-none  z-20   p-1`}
         style={{
-          left: `${editingText.x}px`,
-          top: `${editingText.y}px`,
-          fontSize: '20px',
-          fontFamily: 'Arial',
-          minWidth: '150px',
-          color: strokeColorRef.current,       
-       caretColor: strokeColorRef.current,   
+           left: `${editingText.x * viewPortTransform.scale + viewPortTransform.translateX}px`,
+            top: `${editingText.y * viewPortTransform.scale + viewPortTransform.translateY}px`,
+            fontSize: '20px',
+            fontFamily: 'Arial',
+            minWidth: '150px',
+            color: strokeColorRef.current,
+            caretColor: strokeColorRef.current,
+            transform: `scale(${1/viewPortTransform.scale})`,
+            transformOrigin: '0 0',
         }}
         onChange={(e) => {
           setEditingText({ ...editingText, text: e.target.value });

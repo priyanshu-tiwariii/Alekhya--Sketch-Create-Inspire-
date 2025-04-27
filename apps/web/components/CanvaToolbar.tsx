@@ -12,10 +12,11 @@ import {
   Type,
   Trash,
   ChevronDown,
+  Hand,
 } from "lucide-react";
 
 const primaryGradient = "from-[#ff9966] to-[#ff5e62]";
-type canvaShape = "rectangle" | "circle" | "line" | "arrow" | "text" | "eraser";
+type canvaShape = "rectangle" | "circle" | "line" | "arrow" | "text" | "eraser" | "hand";
 
 type Props = {
   selectedTool: string;
@@ -27,6 +28,7 @@ type Props = {
 };
 
 const tools = [
+  { name: "hand", icon: Hand },
   { name: "rectangle", icon: RectangleHorizontal },
   { name: "circle", icon: Circle },
   { name: "line", icon: Minus },
@@ -99,9 +101,14 @@ export const CanvaToolbar = ({
               onClick={() => handleClick(tool.name)}
               className={`p-2 rounded-lg transition-all duration-150 relative group ${
                 isSelected
-                  ? `bg-orange-500 text-gray-50 ring-2 ring-offset-2 ring-offset-black ring-[--tw-ring-color]`
+                  ? `bg-orange-500 text-gray-50 ring-2 ring-offset-2 ring-offset-black ring-[--tw-ring-color] ${
+                      tool.name === "hand" ? "cursor-grab active:cursor-grabbing" : ""
+                    }`
                   : "text-gray-50 hover:bg-white/10"
               }`}
+              style={{
+                cursor: tool.name === "hand" ? "grab" : "default",
+              }}
             >
               <Icon size={24} strokeWidth={1.8} />
               <span className="absolute bottom-[-1.6rem] left-1/2 -translate-x-1/2 text-[10px] text-gray-50 opacity-0 group-hover:opacity-100 transition-opacity">
