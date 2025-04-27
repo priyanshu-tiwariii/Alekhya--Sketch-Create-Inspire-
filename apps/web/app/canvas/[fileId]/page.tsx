@@ -10,6 +10,8 @@ import { drawLine } from '../../../components/CanvasTools/drawLine';
 import { drawText } from '../../../components/CanvasTools/writeText';
 import { drawArrowLine } from '../../../components/CanvasTools/drawArrowLine';
 import { eraser } from '../../../components/CanvasTools/eraser';
+import { undo } from '../../../components/CanvasTools/undo';
+import { redo } from '../../../components/CanvasTools/redo';
 
 type Shape = {
   id: string;
@@ -50,14 +52,6 @@ export default function CanvasPage() {
       y: (y - viewPortTransform.translateY) / viewPortTransform.scale
     };
   };
-
-  // Convert canvas coordinates to screen coordinates
-  const canvasToScreen = (x: number, y: number) => {
-    return {
-      x: x * viewPortTransform.scale + viewPortTransform.translateX,
-      y: y * viewPortTransform.scale + viewPortTransform.translateY
-    };
-  };
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
   // Text Editing State -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -75,27 +69,10 @@ export default function CanvasPage() {
   
   const fillColor = undefined;
   
-  const handleUndo = () =>{
-    if(shapes.current.length >0){
-      const lastShape = shapes.current.pop();
-      if(lastShape){
-        tempShapes.current.push(lastShape);
-        drawAllShapes();
-        console.log('Undo:', lastShape);
-      }
-    }
-  }
+ 
 
-  const handleRedo = () =>{
-    if(tempShapes.current.length >0){
-      const lastShape = tempShapes.current.pop();
-      if(lastShape){
-        shapes.current.push(lastShape);
-        drawAllShapes();
-        console.log('Redo:', lastShape);
-      }
-    }
-  }
+
+    
 
   // Handle text input completion ------------ -------------------------------------------------------------------------------------------------------------------------------------------------
   const handleTextComplete = () => {
@@ -216,6 +193,17 @@ export default function CanvasPage() {
       });
     };
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+
+  // Handle undo and redo -------------------------------------------------------------------------------------------------------------------------------------------------
+  const handleUndo =()=>{
+    undo({shapes,tempShapes,drawAllShapes});
+  }
+
+  const handleRedo = () =>{
+    redo({shapes, tempShapes, drawAllShapes});
+  }
+  
+  //--------------------------------------------------------------------------------------------------------------------------------------------------
 
   //Color Picker  -------------------------------------------------------------------------------------------------------------------------------------------------
     useEffect(() => {
