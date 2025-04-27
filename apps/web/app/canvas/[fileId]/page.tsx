@@ -16,6 +16,7 @@ import { useRef, useEffect, useState } from 'react';
 
 // Imported Types -----------------------------------------------------------------------------------------------------------------------------------------------------
  import { Shape } from '../../../Types/shape.types';
+import { drawAllShapes } from '../../../components/CanvasTools/drawAllShapes';
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -58,6 +59,19 @@ export default function CanvasPage() {
   const strokeColorRef = useRef<string>(strokeColor);
   const fillColor = undefined;
      
+   // Draw all shapes on canvas -------------------------------------------------------------------------------------------------------------------------------------------------
+   const handleDrawAllShapes = () => {
+    if (canvaRef.current) {
+      drawAllShapes({
+        canvaRef: { current: canvaRef.current },
+        viewPortTransform,
+        shapes,
+        fillColor
+      });
+    }
+  }
+  // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+
 
   // Handle text input completion ------------ -------------------------------------------------------------------------------------------------------------------------------------------------
   const handleTextComplete = () => {
@@ -89,7 +103,7 @@ export default function CanvasPage() {
     };
   
     shapes.current.push(newTextShape);
-    drawAllShapes();
+    handleDrawAllShapes();
     setEditingText(null);
   };
   
@@ -106,86 +120,14 @@ export default function CanvasPage() {
     };
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
-  // Draw all shapes on canvas -------------------------------------------------------------------------------------------------------------------------------------------------
-    const drawAllShapes = () => {
-      const canvas = canvaRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      ctx.setTransform(
-        viewPortTransform.scale, 
-        0, 
-        0, 
-        viewPortTransform.scale, 
-        viewPortTransform.translateX, 
-        viewPortTransform.translateY
-      )
-      shapes.current.forEach((shape) => {
-        if (shape.type === 'rectangle') {
-          drawRectangle({
-            x: shape.x,
-            y: shape.y,
-            w: shape.w,
-            h: shape.h,
-            color: shape.color ,
-            ctx,
-            fillColor,
-          });
-        } else if (shape.type === 'circle') {
-          drawCircle({
-            x: shape.x + shape.w / 2,
-            y: shape.y + shape.h / 2,
-            radius: shape.radius || Math.abs(shape.w) / 2,
-            color: shape.color ,
-            ctx,
-            fillColor,
-          });
-        } else if (shape.type === 'line') {
-          drawLine({
-            x: shape.x,
-            y: shape.y,
-            w: shape.w,
-            h: shape.h,
-            color: shape.color,
-            ctx,
-          });
-        }
-        else if (shape.type === 'arrow') {
-          drawArrowLine({
-            startX : shape.x,
-            startY : shape.y,
-            endX : shape.w,
-            endY : shape.h,
-            color: shape.color,
-            ctx,
-            fillColor,
-          }) 
-        }
-        else if (shape.type === 'text') {
-          drawText({
-            x: shape.x,
-            y: shape.y,
-            text: shape.text || 'Text',
-            color: shape.color || strokeColor,
-            fontSize: shape.fontSize || 20,
-            fontFamily: shape.fontFamily || 'Arial',
-            ctx,
-          });
-        }
-      });
-    };
-  // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
-
+ 
   // Handle undo and redo -------------------------------------------------------------------------------------------------------------------------------------------------
   const handleUndo =()=>{
-    undo({shapes,tempShapes,drawAllShapes});
+    undo({shapes, tempShapes, drawAllShapes : handleDrawAllShapes});
   }
 
   const handleRedo = () =>{
-    redo({shapes, tempShapes, drawAllShapes});
+    redo({shapes, tempShapes, drawAllShapes:handleDrawAllShapes});
   }
   
   //--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -228,7 +170,7 @@ export default function CanvasPage() {
 
       console.log("ViewPortTransform", viewPortTransform);
       setLastPanPosition({ x: e.clientX, y: e.clientY });
-      drawAllShapes();
+      handleDrawAllShapes();
       e.preventDefault();
     }
 
@@ -270,7 +212,7 @@ export default function CanvasPage() {
 
         if (shapeToDelete) {
           shapes.current = shapes.current.filter((shape) => shape.id !== shapeToDelete.id);
-          drawAllShapes();
+          handleDrawAllShapes();
         }
         isDrawing = false;
       }
@@ -287,7 +229,7 @@ export default function CanvasPage() {
       const height = currentY - startY;
       
       console.log('currentX:', currentX, 'currentY:', currentY, 'width:', width, 'height:', height);
-      drawAllShapes();
+      handleDrawAllShapes();
 
       if (selectedTool === 'text') {
         const clickedText = shapes.current.find((shape) => {
@@ -311,7 +253,7 @@ export default function CanvasPage() {
 
           tempShapes.current = [];
       
-          drawAllShapes();
+          handleDrawAllShapes();
       
           setTimeout(() => {
             textInputRef.current?.focus();
@@ -418,7 +360,7 @@ export default function CanvasPage() {
         tempShapes.current = [];
       }
       shapes.current.push(newShape);
-      drawAllShapes();
+      handleDrawAllShapes();
       isDrawing = false;
     };
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
