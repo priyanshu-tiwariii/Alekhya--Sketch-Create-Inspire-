@@ -1,6 +1,8 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
+import { Minus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 // Imported Tools -----------------------------------------------------------------------------------------------------------------------------------------------------
   import { CanvaToolbar } from '../../../components/CanvaToolbar';
@@ -180,15 +182,17 @@ export default function CanvasPage() {
       const mouseX = e.clientX - rec.left;
       const mouseY = e.clientY - rec.top;
 
-      //canvas pos before zooming
-      const canvasX = (mouseX - viewPortTransform.translateX) / viewPortTransform.scale;
-      const canvasY = (mouseY - viewPortTransform.translateY) / viewPortTransform.scale;
+      console.log("Mouse Position", { mouseX, mouseY });
+      const { x: canvasX, y: canvasY } = screenToCanvas(mouseX, mouseY);
+      console.log("Mouse Position in Canvas", { canvasX, canvasY });
 
       const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
       const newScale = Math.max(0.1, Math.min(viewPortTransform.scale * zoomFactor, 10)); 
 
       const newTranslateX = mouseX - (canvasX * newScale);
       const newTranslateY = mouseY - (canvasY * newScale);
+
+      console.log("New Translate", { newTranslateX, newTranslateY });
 
       setViewPortTransform({
         scale: newScale,
@@ -419,7 +423,51 @@ export default function CanvasPage() {
           setSelectedTool('text');
         }}
       />
-
+      {/* Zoom Controls Container */}
+      <div className="fixed bottom-4 right-4 bg-gray-700 backdrop-blur-sm rounded-lg p-2 flex items-center gap-2 z-20 shadow-lg">
+      <button onClick={()=>{
+        setViewPortTransform(prev =>({
+          ...prev,
+          scale:Math.max(prev.scale*0.9,0.1)
+        }));
+        handleDrawAllShapes();
+      }}
+      className="p-2 rounded hover:bg-gray-800"
+      title="Zoom Out"
+      >
+        <Minus />
+      </button>
+      <span className="text-sm font-medium w-12 text-center">
+      {Math.round(viewPortTransform.scale * 100)}%
+    </span>
+      <button onClick={()=>{
+        setViewPortTransform(prev =>({
+          ...prev,
+          scale:Math.min(prev.scale*1.1,10)
+        }));
+        handleDrawAllShapes();
+      }}
+      className="p-2 rounded hover:bg-gray-800"
+      title="Zoom Out"
+      >
+        <Plus />
+      </button>
+      <button 
+      onClick={() => {
+        setViewPortTransform({
+          scale: 1,
+          translateX: 0,
+          translateY: 0
+        });
+        handleDrawAllShapes();
+      }}
+      className="p-2 rounded hover:bg-gray-800 text-sm"
+      title="Reset Zoom"
+    >
+      Reset
+    </button>
+      </div>
+  
       {editingText && (
         <input
         ref={textInputRef}
