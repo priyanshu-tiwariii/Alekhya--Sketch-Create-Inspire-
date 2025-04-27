@@ -173,6 +173,32 @@ export default function CanvasPage() {
       console.log("Panning ended");
     }
 
+    const handleWheel = (e: WheelEvent) =>{
+      e.preventDefault(); 
+      const rec = canvaRef.current?.getBoundingClientRect();
+      if (!rec) return;
+      const mouseX = e.clientX - rec.left;
+      const mouseY = e.clientY - rec.top;
+
+      //canvas pos before zooming
+      const canvasX = (mouseX - viewPortTransform.translateX) / viewPortTransform.scale;
+      const canvasY = (mouseY - viewPortTransform.translateY) / viewPortTransform.scale;
+
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+      const newScale = Math.max(0.1, Math.min(viewPortTransform.scale * zoomFactor, 10)); 
+
+      const newTranslateX = mouseX - (canvasX * newScale);
+      const newTranslateY = mouseY - (canvasY * newScale);
+
+      setViewPortTransform({
+        scale: newScale,
+        translateX: newTranslateX,
+        translateY: newTranslateY,
+      });
+
+      handleDrawAllShapes();
+    }
+
   //----------------------------------------------------------------------------------------------------------------------------------------------------
   
   // Initialize canvas and context -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -358,9 +384,12 @@ export default function CanvasPage() {
     canvas.addEventListener('mouseup', handlePanEnd);
     canvas.addEventListener('mouseleave', handlePanEnd);
 
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+
     canvas.addEventListener("mousedown", handleMouseDown);
     canvas.addEventListener("mousemove", handleMouseMove);
     canvas.addEventListener("mouseup", handleMouseUp);
+
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
@@ -368,12 +397,13 @@ export default function CanvasPage() {
       canvas.removeEventListener('mousemove', handlePanMove);
       canvas.removeEventListener('mouseup', handlePanEnd);
       canvas.removeEventListener('mouseleave', handlePanEnd);
+      canvas.removeEventListener('wheel', handleWheel);
 
       canvas.removeEventListener("mousedown", handleMouseDown);
       canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [selectedTool,isPanning,lastPanPosition]);
+  }, [selectedTool,isPanning,lastPanPosition,viewPortTransform]);
 
   return (
     <div>
