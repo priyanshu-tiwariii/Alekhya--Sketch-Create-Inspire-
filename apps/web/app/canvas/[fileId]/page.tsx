@@ -15,8 +15,8 @@ import { useRef, useEffect, useState } from 'react';
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // Imported Types -----------------------------------------------------------------------------------------------------------------------------------------------------
- import { Shape } from '../../../Types/shape.types';
-import { drawAllShapes } from '../../../components/CanvasTools/drawAllShapes';
+ import { Shape } from '../../../types/shape.types';
+ import { drawAllShapes } from '../../../components/CanvasTools/drawAllShapes';
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -31,19 +31,19 @@ export default function CanvasPage() {
   const [strokeColor, setstrokeColor] = useState("#ffffff");
 
   //Panning and Zooming Sate --------------------------------------------------------------------------------------------------------------------------------------------
-  const [isPanning, setIsPanning] = useState(false);
-  const [lastPanPosition, setLastPanPosition] = useState<{ x: number; y: number } | null>(null);
-  const [viewPortTransform, setViewPortTransform] = useState({
-    scale: 1,
-    translateX: 0,
-    translateY: 0,
-  });
-  const screenToCanvas = (x: number, y: number) => {
-    return {
-      x: (x - viewPortTransform.translateX) / viewPortTransform.scale,
-      y: (y - viewPortTransform.translateY) / viewPortTransform.scale
+    const [isPanning, setIsPanning] = useState(false);
+    const [lastPanPosition, setLastPanPosition] = useState<{ x: number; y: number } | null>(null);
+    const [viewPortTransform, setViewPortTransform] = useState({
+      scale: 1,
+      translateX: 0,
+      translateY: 0,
+    });
+    const screenToCanvas = (x: number, y: number) => {
+      return {
+        x: (x - viewPortTransform.translateX) / viewPortTransform.scale,
+        y: (y - viewPortTransform.translateY) / viewPortTransform.scale
+      };
     };
-  };
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
   // Text Editing State -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -55,59 +55,57 @@ export default function CanvasPage() {
       color: string;
     } | null>(null);
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
-  const textInputRef = useRef<HTMLInputElement | null>(null);
-  const strokeColorRef = useRef<string>(strokeColor);
-  const fillColor = undefined;
-     
-   // Draw all shapes on canvas -------------------------------------------------------------------------------------------------------------------------------------------------
-   const handleDrawAllShapes = () => {
-    if (canvaRef.current) {
-      drawAllShapes({
-        canvaRef: { current: canvaRef.current },
-        viewPortTransform,
-        shapes,
-        fillColor
-      });
+    const textInputRef = useRef<HTMLInputElement | null>(null);
+    const strokeColorRef = useRef<string>(strokeColor);
+    const fillColor = undefined;
+      
+    // Draw all shapes on canvas -------------------------------------------------------------------------------------------------------------------------------------------------
+    const handleDrawAllShapes = () => {
+      if (canvaRef.current) {
+        drawAllShapes({
+          canvaRef: { current: canvaRef.current },
+          viewPortTransform,
+          shapes,
+          fillColor
+        });
+      }
     }
-  }
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
 
   // Handle text input completion ------------ -------------------------------------------------------------------------------------------------------------------------------------------------
-  const handleTextComplete = () => {
-    if (!editingText || !editingText.text.trim()) {
+    const handleTextComplete = () => {
+      if (!editingText || !editingText.text.trim()) {
+        setEditingText(null);
+        return;
+      }
+    
+      const canvas = canvaRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+    
+      ctx.font = '20px Arial';
+      const metrics = ctx.measureText(editingText.text);
+    
+      shapes.current = shapes.current.filter((shape) => shape.id !== editingText.id);
+      const newTextShape: Shape = {
+        id: editingText.id,
+        type: 'text',
+        x: editingText.x,
+        y: editingText.y,
+        w: metrics.width,
+        h: 20,
+        text: editingText.text,
+        fontSize: 20,
+        fontFamily: 'Arial',
+        color: strokeColor,
+      };
+    
+      shapes.current.push(newTextShape);
+      handleDrawAllShapes();
       setEditingText(null);
-      return;
-    }
-  
-    const canvas = canvaRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-  
-    ctx.font = '20px Arial';
-    const metrics = ctx.measureText(editingText.text);
-  
-    shapes.current = shapes.current.filter((shape) => shape.id !== editingText.id);
-    const newTextShape: Shape = {
-      id: editingText.id,
-      type: 'text',
-      x: editingText.x,
-      y: editingText.y,
-      w: metrics.width,
-      h: 20,
-      text: editingText.text,
-      fontSize: 20,
-      fontFamily: 'Arial',
-      color: strokeColor,
     };
-  
-    shapes.current.push(newTextShape);
-    handleDrawAllShapes();
-    setEditingText(null);
-  };
-  
-  
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
   // Handle key down in text input  -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -122,14 +120,8 @@ export default function CanvasPage() {
 
  
   // Handle undo and redo -------------------------------------------------------------------------------------------------------------------------------------------------
-  const handleUndo =()=>{
-    undo({shapes, tempShapes, drawAllShapes : handleDrawAllShapes});
-  }
-
-  const handleRedo = () =>{
-    redo({shapes, tempShapes, drawAllShapes:handleDrawAllShapes});
-  }
-  
+    const handleUndo =()=>{undo({shapes, tempShapes, drawAllShapes : handleDrawAllShapes});}
+    const handleRedo = () =>{redo({shapes, tempShapes, drawAllShapes:handleDrawAllShapes});}
   //--------------------------------------------------------------------------------------------------------------------------------------------------
 
   //Color Picker  -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -137,6 +129,7 @@ export default function CanvasPage() {
       strokeColorRef.current = strokeColor;
     }, [strokeColor]);
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+  
   useEffect(() => {
   // Resize canvas to fit window  -------------------------------------------------------------------------------------------------------------------------------------------------
     const resizeCanvas = () => {
@@ -180,7 +173,6 @@ export default function CanvasPage() {
       console.log("Panning ended");
     }
 
-
   //----------------------------------------------------------------------------------------------------------------------------------------------------
   
   // Initialize canvas and context -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -188,13 +180,9 @@ export default function CanvasPage() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
-
-
     let isDrawing = false;
     let startX = 0;
     let startY = 0;
-   
 
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
   
@@ -365,10 +353,10 @@ export default function CanvasPage() {
     };
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
-  canvas.addEventListener('mousedown', handlePanStart);
-  canvas.addEventListener('mousemove', handlePanMove);
-  canvas.addEventListener('mouseup', handlePanEnd);
-  canvas.addEventListener('mouseleave', handlePanEnd);
+    canvas.addEventListener('mousedown', handlePanStart);
+    canvas.addEventListener('mousemove', handlePanMove);
+    canvas.addEventListener('mouseup', handlePanEnd);
+    canvas.addEventListener('mouseleave', handlePanEnd);
 
     canvas.addEventListener("mousedown", handleMouseDown);
     canvas.addEventListener("mousemove", handleMouseMove);
