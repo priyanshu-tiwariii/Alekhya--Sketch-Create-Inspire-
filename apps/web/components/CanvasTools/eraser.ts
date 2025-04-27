@@ -1,16 +1,4 @@
-type Shape = {
-  id: string;
-  type: 'rectangle' | 'circle' | 'line' | 'arrow' | 'text' | 'eraser' | 'hand';
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  radius?: number;
-  text?: string;
-  fontSize?: number;
-  fontFamily?: string;
-  color?: string;
-};
+import { Shape } from "../../Types/shape.types";
   
   export const eraser = ({ shapes, startX, startY }: { shapes: Shape[], startX: number, startY: number }) => {
     return shapes.find((shape: Shape) => {

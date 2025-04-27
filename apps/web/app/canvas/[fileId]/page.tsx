@@ -1,31 +1,22 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import imagePng from "../../../images/image.png";
 
-import { CanvaToolbar } from '../../../components/CanvaToolbar';
-import { drawRectangle } from '../../../components/CanvasTools/drawRectangle';
-import { drawCircle } from '../../../components/CanvasTools/drawCircle';
-import { drawLine } from '../../../components/CanvasTools/drawLine';
-import { drawText } from '../../../components/CanvasTools/writeText';
-import { drawArrowLine } from '../../../components/CanvasTools/drawArrowLine';
-import { eraser } from '../../../components/CanvasTools/eraser';
-import { undo } from '../../../components/CanvasTools/undo';
-import { redo } from '../../../components/CanvasTools/redo';
+// Imported Tools -----------------------------------------------------------------------------------------------------------------------------------------------------
+  import { CanvaToolbar } from '../../../components/CanvaToolbar';
+  import { drawRectangle } from '../../../components/CanvasTools/drawRectangle';
+  import { drawCircle } from '../../../components/CanvasTools/drawCircle';
+  import { drawLine } from '../../../components/CanvasTools/drawLine';
+  import { drawText } from '../../../components/CanvasTools/writeText';
+  import { drawArrowLine } from '../../../components/CanvasTools/drawArrowLine';
+  import { eraser } from '../../../components/CanvasTools/eraser';
+  import { undo } from '../../../components/CanvasTools/undo';
+  import { redo } from '../../../components/CanvasTools/redo';
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-type Shape = {
-  id: string;
-  type: 'rectangle' | 'circle' | 'line' | 'arrow' | 'text' | 'eraser' | 'hand';
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  radius?: number;
-  text?: string;
-  fontSize?: number;
-  fontFamily?: string;
-  color?: string;
-};
+// Imported Types -----------------------------------------------------------------------------------------------------------------------------------------------------
+ import { Shape } from '../../../Types/shape.types';
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 export default function CanvasPage() {
@@ -64,15 +55,9 @@ export default function CanvasPage() {
     } | null>(null);
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
   const textInputRef = useRef<HTMLInputElement | null>(null);
-    const strokeColorRef = useRef<string>(strokeColor);
- 
-  
+  const strokeColorRef = useRef<string>(strokeColor);
   const fillColor = undefined;
-  
- 
-
-
-    
+     
 
   // Handle text input completion ------------ -------------------------------------------------------------------------------------------------------------------------------------------------
   const handleTextComplete = () => {

@@ -1,8 +1,8 @@
 
-
+import { Shape } from "../../Types/shape.types";
 type Props = {
-    shapes: React.RefObject<any[]>;
-    tempShapes: React.RefObject<any[]>;
+    shapes: React.RefObject<Shape[]>;
+    tempShapes: React.RefObject<Shape[]>;
     drawAllShapes: () => void;
   };
   
