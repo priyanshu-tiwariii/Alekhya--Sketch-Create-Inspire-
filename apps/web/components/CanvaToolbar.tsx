@@ -28,6 +28,8 @@ type Props = {
   clear: () => void;
   setSelectedTool: (tool: canvaShape) => void;
   setSelectedColor: (color: string) => void;
+setFontSize: (size: string) => void;
+setFontFamily: (family: string) => void;
 };
 
 const tools = [
@@ -56,9 +58,7 @@ const colors = [
   { name: "Orange", value: "#fb923c" },
 ];
 
-const fontSizes = ["12px", "16px", "20px", "24px", "32px"];
-const fontWeights = ["normal", "bold", "bolder", "lighter"];
-const fontStyles = ["normal", "italic", "oblique"];
+const fontSizes = ["8px","10px","12px", "16px", "20px", "24px", "32px"];
 const fontFamilies = [
   { name: "Sans-serif", value: "sans-serif" },
   { name: "Serif", value: "serif" },
@@ -73,14 +73,17 @@ export const CanvaToolbar = ({
   clear,
   setSelectedTool,
   setSelectedColor,
+  setFontSize,
+setFontFamily,
+  
 }: Props) => {
   const [colorDropdownOpen, setColorDropdownOpen] = useState(false);
   const [selectedColor, updateSelectedColor] = useState(colors[0]?.value || "#ffffff");
 
-  const [fontSize, setFontSize] = useState("16px");
-  const [fontWeight, setFontWeight] = useState("normal");
-  const [fontStyle, setFontStyle] = useState("normal");
-  const [fontFamily, setFontFamily] = useState("sans-serif");
+  const [fontSize, updateFontSize] = useState("16px");
+  const [fontWeight, updateFontWeight] = useState("normal");
+  const [fontStyle, updateFontStyle] = useState("normal");
+  const [fontFamily, updateFontFamily] = useState("sans-serif");
 
   const handleClick = (toolName: string) => {
     switch (toolName) {
@@ -105,12 +108,27 @@ export const CanvaToolbar = ({
     setColorDropdownOpen(false);
   };
 
+    const handleFontSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const size = e.target.value;
+        updateFontSize(size);
+        setFontSize(size);
+    };
+
+    
+
+    const handleFontFamilyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const family = e.target.value;
+        updateFontFamily(family);
+        setFontFamily(family);
+    };
+    
+
   return (
     <>
       
       <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-white/20 backdrop-blur-md px-6 py-1 rounded-xl border border-white/30 shadow-2xl flex items-center gap-6 min-w-fit">
         
-        {/* Left - Tools */}
+    {/* Left - Tools */}
         <div className="flex items-center gap-3 pr-4 border-r border-white/20">
           {tools.map((tool) => {
             const Icon = tool.icon;
@@ -137,8 +155,9 @@ export const CanvaToolbar = ({
             );
           })}
         </div>
+    {/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
 
-        {/* Color Picker */}
+    {/* Color Picker ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
         <div className="relative">
           <button
             onClick={() => setColorDropdownOpen((prev) => !prev)}
@@ -170,12 +189,14 @@ export const CanvaToolbar = ({
           )}
         </div>
 
-        {/* Font Options - Only when Text Tool is Selected */}
+    {/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+    
+    {/* Font Options ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
         {selectedTool === "text" && (
           <div className="flex items-center gap-4 border-l border-white/20 pl-4">
             <select
               value={fontSize}
-              onChange={(e) => setFontSize(e.target.value)}
+              onChange={handleFontSizeChange}
               className="bg-transparent text-white text-sm"
             >
               {fontSizes.map((size) => (
@@ -185,33 +206,10 @@ export const CanvaToolbar = ({
               ))}
             </select>
 
-            <select
-              value={fontWeight}
-              onChange={(e) => setFontWeight(e.target.value)}
-              className="bg-transparent text-white text-sm"
-            >
-              {fontWeights.map((weight) => (
-                <option key={weight} value={weight} className="bg-black text-white">
-                  {weight}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={fontStyle}
-              onChange={(e) => setFontStyle(e.target.value)}
-              className="bg-transparent text-white text-sm"
-            >
-              {fontStyles.map((style) => (
-                <option key={style} value={style} className="bg-black text-white">
-                  {style}
-                </option>
-              ))}
-            </select>
 
             <select
               value={fontFamily}
-              onChange={(e) => setFontFamily(e.target.value)}
+              onChange={handleFontFamilyChange}
               className="bg-transparent text-white text-sm"
             >
               {fontFamilies.map((font) => (
@@ -223,7 +221,9 @@ export const CanvaToolbar = ({
           </div>
         )}
 
-        {/* Action Buttons */}
+    {/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------  */}
+    
+    {/* Action Buttons-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
         <div className="flex items-center gap-3 px- border-l border-white/20 pl-4">
           {actions.map((tool) => {
             const Icon = tool.icon;
@@ -242,20 +242,24 @@ export const CanvaToolbar = ({
           })}
         </div>
       </div>
+          
+    {/* --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+    
 
-      {/* Save and Share (separated at top right) */}
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
-      <button className="p-2 rounded-xl border border-white/30 shadow-2xl text-white hover:bg-white/30 transition-all duration-150 flex items-center gap-1 bg-white/20 backdrop-blur-md">
-          <Share2 size={16} />
-          <span className="text-sm hidden md:inline">Share</span>
-        </button>
-        <button className="p-2   text-white rounded-xl border border-white/30 shadow-2xl bg-orange-500 hover:bg-orange-600 transition-all duration-150 flex items-center gap-1  backdrop-blur-md">
-          <Save size={16}  />
-          <span className="text-sm hidden md:inline">Save</span>
-        </button>
+    {/* Save and Share --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
+            <button className="p-2 rounded-xl border border-white/30 shadow-2xl text-white hover:bg-white/30 transition-all duration-150 flex items-center gap-1 bg-white/20 backdrop-blur-md">
+                <Share2 size={16} />
+                <span className="text-sm hidden md:inline">Share</span>
+                </button>
+                <button className="p-2   text-white rounded-xl border border-white/30 shadow-2xl bg-orange-500 hover:bg-orange-600 transition-all duration-150 flex items-center gap-1  backdrop-blur-md">
+                <Save size={16}  />
+                <span className="text-sm hidden md:inline">Save</span>
+            </button>
 
-       
-      </div>
+        </div>
+    {/* --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+   
     </>
   );
 };

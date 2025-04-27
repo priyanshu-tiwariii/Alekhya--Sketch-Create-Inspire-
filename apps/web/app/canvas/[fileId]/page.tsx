@@ -31,6 +31,9 @@ export default function CanvasPage() {
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [selectedTool, setSelectedTool] = useState<Shape["type"]>('rectangle');
   const [strokeColor, setstrokeColor] = useState("#ffffff");
+  const [fontSize, setFontSize] = useState("16px");
+  const [fontFamily, setFontFamily] = useState('sans-serif');
+ 
 
   //Panning and Zooming Sate --------------------------------------------------------------------------------------------------------------------------------------------
     const [isPanning, setIsPanning] = useState(false);
@@ -55,6 +58,9 @@ export default function CanvasPage() {
       x: number;
       y: number;
       color: string;
+      fontSize?: number;
+      fontFamily?: string;
+    
     } | null>(null);
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
     const textInputRef = useRef<HTMLInputElement | null>(null);
@@ -87,7 +93,8 @@ export default function CanvasPage() {
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
     
-      ctx.font = '20px Arial';
+      ctx.font = `${fontSize} ${fontFamily}`;
+      console.log("Font",ctx.font);
       const metrics = ctx.measureText(editingText.text);
     
       shapes.current = shapes.current.filter((shape) => shape.id !== editingText.id);
@@ -99,8 +106,8 @@ export default function CanvasPage() {
         w: metrics.width,
         h: 20,
         text: editingText.text,
-        fontSize: 20,
-        fontFamily: 'Arial',
+        fontSize: parseInt(fontSize),
+        fontFamily: fontFamily,
         color: strokeColor,
       };
     
@@ -477,8 +484,8 @@ export default function CanvasPage() {
         style={{
            left: `${editingText.x * viewPortTransform.scale + viewPortTransform.translateX}px`,
             top: `${editingText.y * viewPortTransform.scale + viewPortTransform.translateY}px`,
-            fontSize: '20px',
-            fontFamily: 'Arial',
+            fontSize: `${fontSize}`,
+            fontFamily:  `${fontFamily}`,
             minWidth: '150px',
             color: strokeColorRef.current,
             caretColor: strokeColorRef.current,
@@ -509,6 +516,8 @@ export default function CanvasPage() {
         }}
         setSelectedTool={(tool) => setSelectedTool(tool as Shape["type"])}
         setSelectedColor={setstrokeColor}
+        setFontSize={setFontSize}
+        setFontFamily={setFontFamily}
       />
     </div>
   );
