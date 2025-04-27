@@ -236,6 +236,7 @@ export default function CanvasPage() {
         const shapeToDelete = eraser({shapes: shapes.current,startX,startY,})
 
         if (shapeToDelete) {
+          tempShapes.current.push(shapeToDelete);
           shapes.current = shapes.current.filter((shape) => shape.id !== shapeToDelete.id);
           handleDrawAllShapes();
         }
