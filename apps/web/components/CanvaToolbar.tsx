@@ -15,7 +15,9 @@ import {
   Hand,
   Save,
   Share2,
+  Home,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const primaryGradient = "from-[#ff9966] to-[#ff5e62]";
 
@@ -85,6 +87,9 @@ setFontFamily,
   const [fontStyle, updateFontStyle] = useState("normal");
   const [fontFamily, updateFontFamily] = useState("sans-serif");
 
+  const router = useRouter();
+
+
   const handleClick = (toolName: string) => {
     switch (toolName) {
       case "undo":
@@ -122,130 +127,143 @@ setFontFamily,
         setFontFamily(family);
     };
     
+    const handleHome = () =>{
+        router.push('/dashboard')
+    
+    }
 
   return (
     <>
-      
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-white/20 backdrop-blur-md px-6 py-1 rounded-xl border border-white/30 shadow-2xl flex items-center gap-6 min-w-fit">
-        
-    {/* Left - Tools */}
-        <div className="flex items-center gap-3 pr-4 border-r border-white/20">
-          {tools.map((tool) => {
-            const Icon = tool.icon;
-            const isSelected = selectedTool === tool.name;
 
-            return (
-              <button
-                key={tool.name}
-                onClick={() => handleClick(tool.name)}
-                className={`p-2 rounded-lg transition-all duration-150 relative group ${
-                  isSelected
-                    ? "bg-orange-500 text-white font-extrabold p-"
-                    : "text-gray-100 hover:bg-white/10"
-                }`}
-                style={{
-                  cursor: tool.name === "hand" ? "grab" : "pointer",
-                }}
-              >
-                <Icon size={16} strokeWidth={1} />
-                <span className="absolute bottom-[-1.8rem] left-1/2 -translate-x-1/2 text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                  {tool.name}
-                </span>
-              </button>
-            );
-          })}
+    {/* Home Button ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ */}
+        <div className="fixed top-4 left-4 z-50 flex items-center gap-3">
+            <button onClick={handleHome} className="p-2  shadow-2xl text-white/80 hover:bg-white/30 hover:rounded-xl transition-all duration-150 flex items-center gap-1 ">
+                <Home size={30} />
+                
+            </button>
         </div>
-    {/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
-
-    {/* Color Picker ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
-        <div className="relative">
-          <button
-            onClick={() => setColorDropdownOpen((prev) => !prev)}
-            className="flex items-center gap-2 p-2 rounded-lg text-white hover:bg-white/10 transition-all duration-150"
-          >
-            <div
-              className="w-5 h-5 rounded-full"
-              style={{ backgroundColor: selectedColor }}
-            />
-            <ChevronDown size={16} />
-          </button>
-
-          {colorDropdownOpen && (
-            <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-white/30 backdrop-blur-md rounded-lg shadow-lg p-2 flex flex-col gap-2 z-10">
-              {colors.map((color) => (
-                <button
-                  key={color.name}
-                  onClick={() => handleColorSelect(color.value)}
-                  className="flex items-center gap-2 p-1 hover:bg-white/10 rounded-md"
-                >
-                  <div
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: color.value }}
-                  />
-                  <span className="text-xs text-white">{color.name}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-    {/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
-    
-    {/* Font Options ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
-        {selectedTool === "text" && (
-          <div className="flex items-center gap-4 border-l border-white/20 pl-4">
-            <select
-              value={fontSize}
-              onChange={handleFontSizeChange}
-              className="bg-transparent text-white text-sm"
-            >
-              {fontSizes.map((size) => (
-                <option key={size} value={size} className="bg-black text-white">
-                  {size}
-                </option>
-              ))}
-            </select>
-
-
-            <select
-              value={fontFamily}
-              onChange={handleFontFamilyChange}
-              className="bg-transparent text-white text-sm"
-            >
-              {fontFamilies.map((font) => (
-                <option key={font.name} value={font.value} className="bg-black text-white">
-                  {font.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-    {/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------  */}
-    
-    {/* Action Buttons-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
-        <div className="flex items-center gap-3 px- border-l border-white/20 pl-4">
-          {actions.map((tool) => {
-            const Icon = tool.icon;
-            return (
-              <button
-                key={tool.name}
-                onClick={() => handleClick(tool.name)}
-                className="p-2 rounded-lg text-white hover:bg-white/10 transition-all duration-150 relative group"
-              >
-                <Icon size={16} strokeWidth={1} />
-                <span className="absolute bottom-[-1.8rem] left-1/2 -translate-x-1/2 text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                  {tool.name}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-          
     {/* --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
-    
 
+
+    {/* ToolBar ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ */}
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-white/20 backdrop-blur-md px-6 py-1 rounded-xl border border-white/30 shadow-2xl flex items-center gap-6 min-w-fit">
+            {/* Left - Tools ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ */}
+                <div className="flex items-center gap-3 pr-4 border-r border-white/20">
+                {tools.map((tool) => {
+                    const Icon = tool.icon;
+                    const isSelected = selectedTool === tool.name;
+
+                    return (
+                    <button
+                        key={tool.name}
+                        onClick={() => handleClick(tool.name)}
+                        className={`p-2 rounded-lg transition-all duration-150 relative group ${
+                        isSelected
+                            ? "bg-orange-500 text-white font-extrabold p-"
+                            : "text-gray-100 hover:bg-white/10"
+                        }`}
+                        style={{
+                        cursor: tool.name === "hand" ? "grab" : "pointer",
+                        }}
+                    >
+                        <Icon size={16} strokeWidth={1} />
+                        <span className="absolute bottom-[-1.8rem] left-1/2 -translate-x-1/2 text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                        {tool.name}
+                        </span>
+                    </button>
+                    );
+                })}
+                </div>
+            {/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+
+            {/* Color Picker ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+                <div className="relative">
+                <button
+                    onClick={() => setColorDropdownOpen((prev) => !prev)}
+                    className="flex items-center gap-2 p-2 rounded-lg text-white hover:bg-white/10 transition-all duration-150"
+                >
+                    <div
+                    className="w-5 h-5 rounded-full"
+                    style={{ backgroundColor: selectedColor }}
+                    />
+                    <ChevronDown size={16} />
+                </button>
+
+                {colorDropdownOpen && (
+                    <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-white/30 backdrop-blur-md rounded-lg shadow-lg p-2 flex flex-col gap-2 z-10">
+                    {colors.map((color) => (
+                        <button
+                        key={color.name}
+                        onClick={() => handleColorSelect(color.value)}
+                        className="flex items-center gap-2 p-1 hover:bg-white/10 rounded-md"
+                        >
+                        <div
+                            className="w-4 h-4 rounded-full"
+                            style={{ backgroundColor: color.value }}
+                        />
+                        <span className="text-xs text-white">{color.name}</span>
+                        </button>
+                    ))}
+                    </div>
+                )}
+                </div>
+            {/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+            
+            {/* Font Options ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+                {selectedTool === "text" && (
+                <div className="flex items-center gap-4 border-l border-white/20 pl-4">
+                    <select
+                    value={fontSize}
+                    onChange={handleFontSizeChange}
+                    className="bg-transparent text-white text-sm"
+                    >
+                    {fontSizes.map((size) => (
+                        <option key={size} value={size} className="bg-black text-white">
+                        {size}
+                        </option>
+                    ))}
+                    </select>
+
+
+                    <select
+                    value={fontFamily}
+                    onChange={handleFontFamilyChange}
+                    className="bg-transparent text-white text-sm"
+                    >
+                    {fontFamilies.map((font) => (
+                        <option key={font.name} value={font.value} className="bg-black text-white">
+                        {font.name}
+                        </option>
+                    ))}
+                    </select>
+                </div>
+                )}
+            {/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------  */}
+            
+            {/* Action Buttons-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+                <div className="flex items-center gap-3 px- border-l border-white/20 pl-4">
+                {actions.map((tool) => {
+                    const Icon = tool.icon;
+                    return (
+                    <button
+                        key={tool.name}
+                        onClick={() => handleClick(tool.name)}
+                        className="p-2 rounded-lg text-white hover:bg-white/10 transition-all duration-150 relative group"
+                    >
+                        <Icon size={16} strokeWidth={1} />
+                        <span className="absolute bottom-[-1.8rem] left-1/2 -translate-x-1/2 text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                        {tool.name}
+                        </span>
+                    </button>
+                    );
+                })}
+                </div>
+            
+            {/* --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+        </div>
+    {/* ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ */}
+    
+    
     {/* Save and Share --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
         <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
             <button className="p-2 rounded-xl border border-white/30 shadow-2xl text-white hover:bg-white/30 transition-all duration-150 flex items-center gap-1 bg-white/20 backdrop-blur-md">

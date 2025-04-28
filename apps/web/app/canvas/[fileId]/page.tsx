@@ -419,6 +419,7 @@ export default function CanvasPage() {
 
   return (
     <div>
+    {/* Canvas Layout Setting ---------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
       <canvas
         ref={canvaRef}
         className="absolute top-0 left-0 cursor-crosshair z-10 bg-black"
@@ -431,51 +432,67 @@ export default function CanvasPage() {
           setSelectedTool('text');
         }}
       />
-      {/* Zoom Controls Container */}
+    {/* ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+    
+    {/* Zoom Controls Container --------------------------------------------------------------------------------------------------------------------------------------------- */}
       <div className="fixed bottom-4 right-4 bg-white/20 backdrop-blur-sm rounded-xl p-2 flex items-center gap-2 z-20 shadow-lg">
-      <button onClick={()=>{
-        setViewPortTransform(prev =>({
-          ...prev,
-          scale:Math.max(prev.scale*0.9,0.1)
-        }));
-        handleDrawAllShapes();
-      }}
-      className="p-2 rounded hover:bg-white/30"
-      title="Zoom Out"
-      >
-        <Minus />
-      </button>
-      <span className="text-sm font-medium w-12 text-center">
-      {Math.round(viewPortTransform.scale * 100)}%
-    </span>
-      <button onClick={()=>{
-        setViewPortTransform(prev =>({
-          ...prev,
-          scale:Math.min(prev.scale*1.1,10)
-        }));
-        handleDrawAllShapes();
-      }}
-      className="p-2 rounded hover:bg-white/30"
-      title="Zoom Out"
-      >
-        <Plus />
-      </button>
-      <button 
-      onClick={() => {
-        setViewPortTransform({
-          scale: 1,
-          translateX: 0,
-          translateY: 0
-        });
-        handleDrawAllShapes();
-      }}
-      className="p-2 rounded hover:bg-orange-500 text-sm"
-      title="Reset Zoom"
-    >
-      Reset
-    </button>
+      
+      {/* zoom out ---------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+        <button onClick={()=>{
+          setViewPortTransform(prev =>({
+            ...prev,
+            scale:Math.max(prev.scale*0.9,0.1)
+          }));
+          handleDrawAllShapes();
+        }}
+        className="p-2 rounded hover:bg-white/30"
+        title="Zoom Out"
+        >
+          <Minus />
+        </button>
+      {/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------  */}
+      
+      {/* Percentage View ----------------------------------------------------------------------------------------------------------------------------------------------------------------*/}
+        <span className="text-sm font-medium w-12 text-center">
+        {Math.round(viewPortTransform.scale * 100)}%
+        </span>
+      {/* ---------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+      
+      {/* Zoom Out ---------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+        <button onClick={()=>{
+          setViewPortTransform(prev =>({
+            ...prev,
+            scale:Math.min(prev.scale*1.1,10)
+          }));
+          handleDrawAllShapes();
+        }}
+        className="p-2 rounded hover:bg-white/30"
+        title="Zoom Out"
+        >
+          <Plus />
+        </button>
+      {/* ---------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+      
+      {/* Reset Button ---------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+        <button 
+        onClick={() => {
+          setViewPortTransform({
+            scale: 1,
+            translateX: 0,
+            translateY: 0
+          });
+          handleDrawAllShapes();
+        }}
+        className="p-2 rounded hover:bg-orange-500 text-sm"
+        title="Reset Zoom"
+        >
+        Reset
+        </button>
+      {/* ---------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
       </div>
-  
+    {/* ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+    
+    {/* Text Input for editing text --------------------------------------------------------------------------------------------------------------------------------------------- */}
       {editingText && (
         <input
         ref={textInputRef}
@@ -502,7 +519,10 @@ export default function CanvasPage() {
       />
       
       )}
-
+    {/* ---------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+    
+    {/* Canvas Tool BAr ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+    
       <CanvaToolbar
         selectedTool={selectedTool}
         undo={handleUndo}
@@ -520,6 +540,8 @@ export default function CanvasPage() {
         setFontSize={setFontSize}
         setFontFamily={setFontFamily}
       />
+    {/* ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
+    
     </div>
   );
 }
