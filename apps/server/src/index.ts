@@ -5,9 +5,11 @@ import cors from 'cors';
 import routes from './routes';
 import cookieParser from 'cookie-parser';
 import { env } from '@repo/backend-common/config';
+import compression from 'compression';
 
 const app = express();
 const server = createServer(app);
+app.use(compression());
 app.use(cookieParser());
 
 dotenv.config();

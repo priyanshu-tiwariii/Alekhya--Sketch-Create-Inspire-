@@ -37,13 +37,13 @@ model Stroke {
   type       String
   x          Float?
   y          Float?
-  w          Float?
-  h          Float?
-  radius     Float?
-  text       String?
-  fontSize   Int?
-  fontFamily String?
-  color      String?
+  w          Float?       @default(0)
+  h          Float?       @default(0)
+  radius     Float?       @default(0)
+  text       String?      @default("")
+  fontSize   Int?         @default(16)
+  fontFamily String?      @default("Arial")
+  color      String?      @default("")
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
   file       CreatedFile  @relation("Strokes", fields: [fileId], references: [id], onDelete: Cascade)

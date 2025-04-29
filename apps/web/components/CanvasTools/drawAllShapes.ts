@@ -18,6 +18,7 @@ type Props = {
     fillColor?: string;
 }
 
+
 export const drawAllShapes = ({canvaRef,viewPortTransform,shapes,fillColor}:Props) => {
       const canvas = canvaRef.current;
       if (!canvas) return;
