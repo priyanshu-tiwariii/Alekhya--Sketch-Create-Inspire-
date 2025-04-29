@@ -32,13 +32,22 @@ model CreatedFile {
 }
 
 model Stroke {
-  id        String      @id @default(uuid())
-  fileId    String
-  data      Json
-  createdAt DateTime    @default(now())
-  file      CreatedFile @relation("Strokes", fields: [fileId], references: [id], onDelete: Cascade)
+  id         String       @id @default(uuid())
+  fileId     String      
+  type       String
+  x          Float?
+  y          Float?
+  w          Float?
+  h          Float?
+  radius     Float?
+  text       String?
+  fontSize   Int?
+  fontFamily String?
+  color      String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  file       CreatedFile  @relation("Strokes", fields: [fileId], references: [id], onDelete: Cascade)
 }
-
 model Collaborator {
   id       String      @id @default(uuid())
   fileId   String

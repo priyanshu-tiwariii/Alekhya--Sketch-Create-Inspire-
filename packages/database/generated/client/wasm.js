@@ -138,8 +138,18 @@ exports.Prisma.CreatedFileScalarFieldEnum = {
 exports.Prisma.StrokeScalarFieldEnum = {
   id: 'id',
   fileId: 'fileId',
-  data: 'data',
-  createdAt: 'createdAt'
+  type: 'type',
+  x: 'x',
+  y: 'y',
+  w: 'w',
+  h: 'h',
+  radius: 'radius',
+  text: 'text',
+  fontSize: 'fontSize',
+  fontFamily: 'fontFamily',
+  color: 'color',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.CollaboratorScalarFieldEnum = {
@@ -155,10 +165,6 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
-exports.Prisma.JsonNullValueInput = {
-  JsonNull: Prisma.JsonNull
-};
-
 exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
@@ -167,12 +173,6 @@ exports.Prisma.QueryMode = {
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
-};
-
-exports.Prisma.JsonNullValueFilter = {
-  DbNull: Prisma.DbNull,
-  JsonNull: Prisma.JsonNull,
-  AnyNull: Prisma.AnyNull
 };
 exports.Role = exports.$Enums.Role = {
   ADMIN: 'ADMIN',
