@@ -2,21 +2,31 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronDown, Check, LinkIcon, Mail, Users } from 'lucide-react';
+import axios from 'axios';
+import { COLLAB_URL } from '../lib/apiEndPoints';
+import { useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+
 
 const ShareButton = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [collaborativeMode, setCollaborativeMode] = useState(false);
   const [email, setEmail] = useState('');
-  const [selectedMode, setSelectedMode] = useState('view');
+  const [selectedMode, setSelectedMode] = useState('USER');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [shareLink, setShareLink] = useState('');
   const [isMobile, setIsMobile] = useState(false);
 
+
+    const params = useParams();
+    const { data: session } = useSession();
+    const fileId = params.fileId;
+    
   const modes = [
     { value: 'USER', label: 'Can View' },
     { value: 'EDITOR', label: 'Can Edit' }
   ];
-
+  
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -29,17 +39,39 @@ const ShareButton = () => {
   const handleInvite = async (e) => {
     e.preventDefault();
     try {
-      const mockResponse = {
-        success: true,
-        link: 'https://yourplatform.com/collab/12345',
-      };
-      setShareLink(mockResponse.link);
+      if (!fileId) {
+        throw new Error('File ID is undefined');
+      }
+      const res = await axios.post(
+        `${COLLAB_URL}/${fileId}`,
+        {
+          email: email,
+          role: selectedMode,
+        },
+        {
+          headers: {
+            Authorization: `${session?.user?.token}`,
+          },
+        }
+      );
+      console.log('Response from invite:', res.data);
+      if (!res.data.success) {
+        throw new Error('Failed to send invite');
+      }
+
+      setShareLink(res?.data?.data);
       setShowSuccessModal(true);
       setIsDropdownOpen(false);
       setEmail('');
       setSelectedMode('view');
     } catch (error) {
-      console.error('Error sending invite:', error);
+      if (axios.isAxiosError(error)) {
+        console.log('Error response:', error.response?.data);
+        alert(error.response?.data?.error || 'An error occurred while sending the invite.');
+      } else {
+        console.error('Unexpected error:', error);
+        alert('An unexpected error occurred. Please try again later.');
+      }
     }
   };
 
@@ -47,10 +79,10 @@ const ShareButton = () => {
     <div className="relative z-50">
       <button
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        className="flex items-center gap-2 px-4 lg:py-3 lg:text-lg text-white bg-white/20 hover:bg-orange-600 transition-all duration-200 rounded-xl shadow-md"
+        className="flex items-center gap-2 px-4 py-3 lg:py-3 lg:text-lg text-white bg-white/20 hover:bg-orange-600 transition-all duration-200 rounded-xl shadow-md"
       >
         {isMobile ? <Users size={18} /> : <LinkIcon size={20} />}
-        {isMobile ? 'Invite' : 'Share'}
+        {isMobile ? '' : 'Share'}
         <ChevronDown
           size={16}
           className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
@@ -86,7 +118,7 @@ const ShareButton = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter email"
-                    className="w-full px-4 py-2 pr-10 border rounded-lg border-gray-300 focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+                    className="w-full px-4 py-2 pr-10 border rounded-lg border-gray-300  text-gray-600 focus:ring-2 focus:ring-orange-500 outline-none text-sm"
                   />
                   <Mail size={16} className="absolute top-2.5 right-3 text-gray-400" />
                 </div>
@@ -97,7 +129,7 @@ const ShareButton = () => {
                 <select
                   value={selectedMode}
                   onChange={(e) => setSelectedMode(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 bg-white focus:ring-2 focus:ring-orange-500"
                 >
                   {modes.map((mode) => (
                     <option key={mode.value} value={mode.value}>
@@ -109,6 +141,7 @@ const ShareButton = () => {
 
               <button
                 type="submit"
+                onSubmit={handleInvite}
                 className="w-full py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all"
               >
                 Send Invite

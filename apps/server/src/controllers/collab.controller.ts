@@ -12,6 +12,9 @@ import { redis } from "../db/index";
             const { fileId } = req.params;
             const { email, role } = req.body;
             const userId = req.user.id;
+            console.log("File ID:", fileId);
+            console.log("Email:", email);
+            console.log("Role:", role);
         
         //Check file exist and user is admin or not parallelly ------------------------------------------------------------------------------------------------------------------------------------------------
             const [file, isAdmin] = await Promise.all([
@@ -51,9 +54,14 @@ import { redis } from "../db/index";
                 },
                 });
         //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        if (!newCollab){
+            throw new apiError(500, "Failed to add collaborator");
+        }
+        
+        let link  = `${process.env.FRONTEND_URL}/canvas/${fileId}?collabId=${newCollab.id}?role=${role}`;
         
         return res.status(201).json(
-            new apiResponse(newCollab, 201, "Collaborator added successfully", true)
+            new apiResponse(link, 201, "Collaborator added successfully", true)
         );
     } catch (error) {
         console.error("Error adding collaborator:", error);
@@ -132,6 +140,7 @@ import { redis } from "../db/index";
         try {
             const { fileId } = req.params;
             const { email, role } = req.body;
+            const collabId = req.query.collabId;
             const userId = req.user.id;
         
         //Check file exist and user is admin or not parallelly ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -159,6 +168,7 @@ import { redis } from "../db/index";
                 where: {
                     fileId,
                     userId: collaboratorUser.id,
+                    id: collabId,
                 },
                 data: {
                     role,
@@ -166,11 +176,12 @@ import { redis } from "../db/index";
             });
 
         //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        
+        console.log("FROnTEND URL", process.env.FRONTEND_URL);
         if (updatedCollab.count === 0) throw new apiError(404, "Collaborator not found");
+        const link = `${process.env.FRONTEND_URL}/canvas/${fileId}?collabId=${collabId}?role=${role}`;
 
         return res.status(200).json(
-            new apiResponse(null, 200, "Collaborator role updated successfully", true)
+            new apiResponse(link, 200, "Collaborator role updated successfully", true)
         );
 
     } catch (error) {
