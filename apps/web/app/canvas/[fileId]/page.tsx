@@ -3,7 +3,9 @@
 import { useRef, useEffect, useState } from 'react';
 import { Minus } from 'lucide-react';
 import { Plus } from 'lucide-react';
-
+import { useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { Loader2 } from "lucide-react";
 // Imported Tools -----------------------------------------------------------------------------------------------------------------------------------------------------
   import { CanvaToolbar } from '../../../components/CanvaToolbar';
   import { drawRectangle } from '../../../components/CanvasTools/drawRectangle';
@@ -19,14 +21,33 @@ import { Plus } from 'lucide-react';
 // Imported Types -----------------------------------------------------------------------------------------------------------------------------------------------------
  import { Shape } from '../../../types/shape.types';
  import { drawAllShapes } from '../../../components/CanvasTools/drawAllShapes';
+import axios from 'axios';
+import { CANVAS_URL } from '../../../lib/apiEndPoints';
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id?: string | null;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      token?: string | null;
+    };
+  }
+}
 
 export default function CanvasPage() {
   const canvaRef = useRef<HTMLCanvasElement | null>(null);
   const shapes = useRef<Shape[]>([]);
   const tempShapes = useRef<Shape[]>([]);
 
+  const added = useRef<Shape[]>([]);
+  const deleted = useRef<string[]>([]);
+  const updated = useRef<Shape[]>([]);
+
+  const params = useParams();
+  const {data :session, status}  = useSession()
 
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [selectedTool, setSelectedTool] = useState<Shape["type"]>('rectangle');
@@ -51,6 +72,7 @@ export default function CanvasPage() {
     };
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
+  
   // Text Editing State -------------------------------------------------------------------------------------------------------------------------------------------------
     const [editingText, setEditingText] = useState<{
       id: string;
@@ -76,7 +98,9 @@ export default function CanvasPage() {
           shapes,
           fillColor
         });
-        console.log("Shapes", shapes.current);
+        console.log("Added Shapes", added.current);
+        console.log("Deleted Shapes", deleted.current);
+        console.log("Updated Shapes", updated.current);
       }
     }
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -113,6 +137,7 @@ export default function CanvasPage() {
       };
     
       shapes.current.push(newTextShape);
+      added.current.push(newTextShape);
       handleDrawAllShapes();
       setEditingText(null);
     };
@@ -140,6 +165,125 @@ export default function CanvasPage() {
     }, [strokeColor]);
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
   
+  // Handle save  -------------------------------------------------------------------------------------------------------------------------------------------------
+  const [isSaving, setIsSaving] = useState(false);
+  const [isContentThere , setIsContentThere] = useState(false);
+  const handleSave = async () => {
+    if (
+      added.current.length === 0 &&
+      updated.current.length === 0 &&
+      deleted.current.length === 0
+      
+    ) {
+      setIsContentThere(false)
+      return;
+    }
+    setIsSaving(true);
+    console.log("Handling Saves")
+
+  
+    try {
+      const fileId = params.fileId;
+  
+      if (!fileId) {
+        throw new Error("File ID is missing in params.");
+      }
+  
+      const response = await axios.post(
+        `${CANVAS_URL}/${fileId}`,
+        {
+          added: added.current,
+          deleted: deleted.current,
+          updated: updated.current,
+        },
+        {
+          headers: {
+            Authorization: `${session?.user?.token}`,
+          },
+        }
+      );
+  
+      if (response.status === 200) {
+        console.log("File saved successfully");
+        added.current = [];
+        deleted.current = [];
+        updated.current = [];
+        setIsContentThere(false) 
+      } else {
+        console.error("Error saving file. Server returned:", response.status);
+      }
+  
+    } catch (error: any) {
+      console.error("Save failed:", error.message || error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  //autoSavE  -------------------------------------------------------------------------------------------------------------------------------------------------
+    useEffect(() => {
+      const autoSaveInterval = setInterval(async () => {
+        if (added.current.length > 0 || updated.current.length > 0 || deleted.current.length > 0) {
+          try {
+            await handleSave();
+          } catch (error) {
+            console.error("Auto-save failed:", error);
+          }
+        }
+      }, 1200000); // 20 min  
+      return () => clearInterval(autoSaveInterval);
+    }, []);
+  // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+
+  //Warn User before leaving the page  -------------------------------------------------------------------------------------------------------------------------------------------------
+  
+
+//------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+
+//Loading Strokes  -------------------------------------------------------------------------------------------------------------------------------------------------
+const [initialLoading, setInitialLoading] = useState(true);
+  useEffect (()=>{
+    console.log("Loading Strokes")
+    const LoadStrokes = async ()=>{
+      const fileId = params.fileId;
+      if (!fileId) return;
+      try {
+        if(session?.user?.token !== undefined){
+        const response = await axios.get(`${CANVAS_URL}/${fileId}`, {
+          headers: {
+            Authorization: `${session?.user?.token}`,
+          },
+        });
+      
+        console.log("Response",response);
+        if (response.status === 200) {
+          const strokes = response.data.data;
+          shapes.current = strokes.map((shape: Shape) => ({ ...shape }));
+          console.log("Shapes", shapes.current);
+
+          added.current = [];
+          deleted.current = [];
+          updated.current = [];
+          setIsContentThere(false);
+
+          handleDrawAllShapes();
+        }
+      }
+      } catch (error) {
+        console.error("Error loading strokes:", error);
+      }
+      finally {
+        setInitialLoading(false);
+      }
+    }
+
+    LoadStrokes();
+  },[params.fileId, session?.user?.token]);
+
+
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+
   useEffect(() => {
   // Resize canvas to fit window  -------------------------------------------------------------------------------------------------------------------------------------------------
     const resizeCanvas = () => {
@@ -239,9 +383,17 @@ export default function CanvasPage() {
         if (shapeToDelete) {
           tempShapes.current.push(shapeToDelete);
           shapes.current = shapes.current.filter((shape) => shape.id !== shapeToDelete.id);
+          const findIndex = added.current.findIndex((shape) => shape.id === shapeToDelete.id);
+          if (findIndex !== -1) {
+            added.current.splice(findIndex, 1);
+          }
+          else {
+            deleted.current.push(shapeToDelete.id);
+          }
           handleDrawAllShapes();
         }
         isDrawing = false;
+        setIsContentThere(true);
       }
     };
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -370,7 +522,7 @@ export default function CanvasPage() {
       const width = currentX - startX;
       const height = currentY - startY;
 
-      console.log('Mouse Up:', { currentX, currentY, width, height });
+     
 
       const newShape: Shape = {
         id: Date.now().toString(),
@@ -387,8 +539,10 @@ export default function CanvasPage() {
         tempShapes.current = [];
       }
       shapes.current.push(newShape);
+      added.current.push(newShape);
       handleDrawAllShapes();
       isDrawing = false;
+      setIsContentThere(true);
     };
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -418,7 +572,15 @@ export default function CanvasPage() {
     };
   }, [selectedTool,isPanning,lastPanPosition,viewPortTransform]);
 
-  return (
+  return initialLoading ? (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="h-12 w-12 animate-spin text-white" />
+        <p className="text-white text-lg">Loading your canvas...</p>
+      </div>
+    </div>
+  ) :  (
+
     <div>
     {/* Canvas Layout Setting ---------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
       <canvas
@@ -528,6 +690,8 @@ export default function CanvasPage() {
         selectedTool={selectedTool}
         undo={handleUndo}
         redo={handleRedo}
+        save={handleSave}
+        isSaving={isSaving}
         clear={() => {
           shapes.current = [];
           const canvas = canvaRef.current;
@@ -540,9 +704,16 @@ export default function CanvasPage() {
         setSelectedColor={setstrokeColor}
         setFontSize={setFontSize}
         setFontFamily={setFontFamily}
+        isContentThere={isContentThere}
       />
     {/* ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
-    
+    {isSaving && (
+  <div className="fixed top-4 right-4 bg-white/80 backdrop-blur-sm rounded-lg p-3 flex items-center gap-2 z-50 shadow-lg">
+    <Loader2 className="h-4 w-4 animate-spin" />
+    <span className="text-sm">Saving changes...</span>
+  </div>
+)}
+
     </div>
   );
 }

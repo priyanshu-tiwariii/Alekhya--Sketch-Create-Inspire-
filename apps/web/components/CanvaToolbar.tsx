@@ -17,6 +17,7 @@ import {
   Home,
   Menu,
   X,
+  Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -31,6 +32,9 @@ type Props = {
   setSelectedColor: (color: string) => void;
   setFontSize: (size: string) => void;
   setFontFamily: (family: string) => void;
+  save: () => void;
+  isSaving : boolean
+  isContentThere : boolean
 };
 
 const tools = [
@@ -77,6 +81,9 @@ export const CanvaToolbar = ({
   setSelectedColor,
   setFontSize,
   setFontFamily,
+  save,
+  isSaving,
+  isContentThere
 }: Props) => {
   const [colorDropdownOpen, setColorDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -206,38 +213,44 @@ export const CanvaToolbar = ({
         {/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
         
         {/* Color Picker ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
-            <div className="relative">
-            <button
-                onClick={() => setColorDropdownOpen(!colorDropdownOpen)}
-                className="flex items-center gap-2 p-2.5 rounded-xl text-white hover:bg-white/10 transition-all w-full"
-            >
-                <div className="w-6 h-6 rounded-full border-2 border-white/30 shadow-sm" 
-                    style={{ backgroundColor: selectedColor }} />
-                {isMobile ? (
-                <span className="text-sm">Select Color</span>
-                ) : (
-                <ChevronDown size={16} />
-                )}
-            </button>
+        <div className="relative">
+  <button
+    onClick={() => setColorDropdownOpen(!colorDropdownOpen)}
+    className="flex items-center gap-2 p-2.5 rounded-xl text-white hover:bg-white/10 transition-all w-full"
+  >
+    <div 
+      className="w-6 h-6 rounded-full border-2 border-white/30 shadow-sm" 
+      style={{ backgroundColor: selectedColor }} 
+    />
+    {isMobile ? (
+      <span className="text-sm">Select Color</span>
+    ) : (
+      <ChevronDown size={16} />
+    )}
+  </button>
 
-            {colorDropdownOpen && (
-                <div className={`absolute ${
-                isMobile ? 'left-0 right-0' : 'left-1/2 -translate-x-1/2'
-                } top-12 bg-black/80  rounded-xl shadow-lg p-3 grid grid-cols-2 gap-2 z-10`}>
-                {colors.map((color) => (
-                    <button
-                    key={color.name}
-                    onClick={() => handleColorSelect(color.value)}
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/20 transition-colors"
-                    >
-                    <div className="w-5 h-5 rounded-full border border-white/20 shadow-sm" 
-                        style={{ backgroundColor: color.value }} />
-                    <span className="text-xs text-white">{color.name}</span>
-                    </button>
-                ))}
-                </div>
-            )}
-            </div>
+  {colorDropdownOpen && (
+    <div className={`absolute ${
+      isMobile 
+        ? 'left-0 right-0' 
+        : 'left-1/2 -translate-x-1/2 min-w-[200px]'
+    } top-12 bg-black/80 rounded-xl shadow-lg p-3 grid grid-cols-2 gap-2 z-10`}>
+      {colors.map((color) => (
+        <button
+          key={color.name}
+          onClick={() => handleColorSelect(color.value)}
+          className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/20 transition-colors"
+        >
+          <div 
+            className="w-5 h-5 rounded-full border border-white/20 shadow-sm" 
+            style={{ backgroundColor: color.value }} 
+          />
+          <span className="text-xs text-white">{color.name}</span>
+        </button>
+      ))}
+    </div>
+  )}
+</div>
         {/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
 
        
@@ -296,9 +309,17 @@ export const CanvaToolbar = ({
           <Share2 size={20} />
           {!isMobile && <span className="text-sm">Share</span>}
         </button>
-        <button className="p-2.5 bg-orange-500 hover:bg-orange-600 rounded-xl border border-white/30 shadow-xl text-white transition-all flex items-center gap-2">
+        <button onClick={save}  disabled={isSaving || ! isContentThere}  className={`p-2.5 ${isContentThere ? 'bg-orange-300' : 'bg-orange-500'} hover:bg-orange-600 rounded-xl border border-white/30 shadow-xl text-white transition-all flex items-center gap-2`}>
+        {isSaving ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : ( 
+        <>
           <Save size={20} />
           {!isMobile && <span className="text-sm">Save</span>}
+        </>
+      )}
+          
+         
         </button>
       </div>
     {/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
