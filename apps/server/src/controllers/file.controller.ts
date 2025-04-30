@@ -17,6 +17,7 @@ interface User {
     createdAt: Date;
   }
 
+  
   const invalidateUserFileCache = async (userId: string) => {
     const keys = await redis.smembers(`user:${userId}:files:keys`);
     if (keys.length > 0) {
@@ -57,12 +58,17 @@ interface User {
       });
 
     
+      //these is doing because suppose new file is created now on the user side when req for the file made but it will get file from cavhed data 
+      //now problem is that we have not added thesenew file so we delete all the file and when user req all file get cached and from there it will get the files.
 
       if (createdByUserId) {
         invalidateUserFileCache(createdByUserId);
       } else {
         throw new apiError(400, "CreatedByUserId is undefined");
       }
+
+      if (!file) throw new apiError(500, "Error creating file");
+
 
       return res.status(201).json(new apiResponse(file, 201, "File created successfully", true));
     } catch (error) {

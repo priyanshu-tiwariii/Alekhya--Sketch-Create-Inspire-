@@ -13,9 +13,8 @@ const ShareButton = () => {
   const [isMobile, setIsMobile] = useState(false);
 
   const modes = [
-    { value: 'view', label: 'Can View' },
-    { value: 'edit', label: 'Can Edit' },
-    { value: 'comment', label: 'Can Comment' },
+    { value: 'USER', label: 'Can View' },
+    { value: 'EDITOR', label: 'Can Edit' }
   ];
 
   useEffect(() => {
@@ -61,7 +60,7 @@ const ShareButton = () => {
       {isDropdownOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white/80 backdrop-blur-xl rounded-xl shadow-2xl border border-orange-100 p-4">
           <div className="flex items-center mb-1 justify-between ">
-            <span className="text-lg font-semibold text-orange-500">Collaborative Mode</span>
+            <span className="text-lg font-semibold text-black/80">Collaborative Mode</span>
             <button
               onClick={() => setCollaborativeMode(!collaborativeMode)}
               className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${

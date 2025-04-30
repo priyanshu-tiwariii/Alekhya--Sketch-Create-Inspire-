@@ -48,6 +48,8 @@ model Stroke {
   updatedAt  DateTime     @updatedAt
   file       CreatedFile  @relation("Strokes", fields: [fileId], references: [id], onDelete: Cascade)
 }
+
+
 model Collaborator {
   id       String      @id @default(uuid())
   fileId   String
