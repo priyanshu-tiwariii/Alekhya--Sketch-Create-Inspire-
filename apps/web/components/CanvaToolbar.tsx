@@ -20,6 +20,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import ShareButton from "./ShareButton";
 
 type canvaShape = "rectangle" | "circle" | "line" | "arrow" | "text" | "eraser" | "hand";
 
@@ -167,7 +168,7 @@ export const CanvaToolbar = ({
         <div className={`fixed top-4 ${isMobile ? 'left-16' : 'left-4'} z-[10000]`}>
           <button 
             onClick={handleHome}
-            className="p-2 bg-white/20 backdrop-blur-lg rounded-xl border border-white/30 shadow-xl text-white hover:bg-white/30 transition-all"
+            className="px-3 sm:py-2 lg:py-3  bg-white/20 backdrop-blur-lg rounded-xl border border-white/30 shadow-xl text-white hover:bg-white/30 transition-all"
           >
             <Home size={24} />
           </button>
@@ -180,7 +181,7 @@ export const CanvaToolbar = ({
         isMobile 
           ? `${mobileMenuOpen ? 'left-0' : '-left-full'} top-16 h-[calc(100vh-5rem)] w-64 transition-all`
           : 'left-1/2 -translate-x-1/2 top-4'
-      } z-[9999] bg-white/20 backdrop-blur-lg px-4 py-3 rounded-xl border border-white/30 shadow-xl flex ${
+      } z-[9999] bg-white/20 backdrop-blur-lg px-4 py-2 rounded-xl border border-white/30 shadow-xl flex ${
         isMobile ? 'flex-col' : 'flex-row'
       } gap-4 pointer-events-auto`}>
 
@@ -261,10 +262,10 @@ export const CanvaToolbar = ({
                 <select
                 value={fontSize}
                 onChange={handleFontSizeChange}
-                className="bg-white/20 text-white rounded-lg p-2 border border-white/30 focus:ring-2 focus:ring-orange-500"
+                className="bg-white/20 text-orange-500 rounded-lg p-2 "
                 >
                 {fontSizes.map((size) => (
-                    <option key={size} value={size} className="bg-black/80">
+                    <option key={size} value={size} className="bg-white/80 ">
                     {size}
                     </option>
                 ))}
@@ -273,10 +274,10 @@ export const CanvaToolbar = ({
                 <select
                 value={fontFamily}
                 onChange={handleFontFamilyChange}
-                className="bg-white/20 text-white rounded-lg p-2 border border-white/30 focus:ring-2 focus:ring-orange-500"
+                className="bg-white/20 text-orange-500 rounded-lg p-2"
                 >
                 {fontFamilies.map((font) => (
-                    <option key={font.name} value={font.value} className="bg-black/80">
+                    <option key={font.name} value={font.value} className="bg-white/80 ">
                     {font.name}
                     </option>
                 ))}
@@ -305,17 +306,14 @@ export const CanvaToolbar = ({
 
     {/* Save/Share Buttons -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------  */}
       <div className="fixed top-4 right-4 z-[10000] flex gap-3">
-        <button className="p-2.5 bg-white/20 backdrop-blur-lg rounded-xl border border-white/30 shadow-xl text-white hover:bg-white/30 transition-all flex items-center gap-2">
-          <Share2 size={20} />
-          {!isMobile && <span className="text-sm">Share</span>}
-        </button>
-        <button onClick={save}  disabled={isSaving || ! isContentThere}  className={`p-2.5 ${isContentThere ? 'bg-orange-300' : 'bg-orange-500'} hover:bg-orange-600 rounded-xl border border-white/30 shadow-xl text-white transition-all flex items-center gap-2`}>
+        <ShareButton />
+        <button onClick={save}  disabled={isSaving || ! isContentThere}  className={` px-4 sm:py-2 lg:py-3  ${isContentThere ? 'bg-orange-500' : 'bg-orange-300 text-white'} hover:bg-orange-600 rounded-xl border border-white/30 shadow-xl  text-white transition-all flex items-center gap-2`}>
         {isSaving ? (
         <Loader2 className="h-4 w-4 animate-spin" />
       ) : ( 
         <>
           <Save size={20} />
-          {!isMobile && <span className="text-sm">Save</span>}
+          {!isMobile && <span className="lg:text-xl">Save</span>}
         </>
       )}
           
