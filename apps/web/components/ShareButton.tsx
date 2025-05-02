@@ -7,7 +7,7 @@ import { COLLAB_URL } from '../lib/apiEndPoints';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
-
+import { AlertModal } from "./AlertModal"
 interface Collaborator {
   id: string;
   fileId: string;
@@ -31,6 +31,10 @@ const ShareButton = () => {
   const [shareLink, setShareLink] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'success' | 'error'>('success');
+  const [showAlert, setShowAlert] = useState(false);
 
   const params = useParams();
   const { data: session } = useSession();
@@ -70,9 +74,13 @@ const ShareButton = () => {
       } catch (error) {
         console.error('Error fetching collaborators:', error);
         if (axios.isAxiosError(error)) {
-          alert(error.response?.data?.error || 'An error occurred while fetching collaborators.');
+          setAlertMessage(error.response?.data?.error || 'An error occurred while fetching collaborators.');
+          setAlertType('error');
+          setShowAlert(true);
         } else {
-          alert('An unexpected error occurred.');
+          setAlertMessage('An unexpected error occurred.');
+          setAlertType('error');
+          setShowAlert(true);
         }
       }
     };
@@ -103,18 +111,63 @@ const ShareButton = () => {
       setSelectedMode('USER');
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        alert(error.response?.data?.error || 'An error occurred while sending the invite.');
+       setAlertMessage(error.response?.data?.error || 'An error occurred while sending the invite.');
+        setAlertType('error');
+        setShowAlert(true);
+
       } else {
-        alert('An unexpected error occurred.');
+        setAlertMessage('Error in sending invite');
+        setAlertType('error');
+        setShowAlert(true);
       }
     }
   };
+
+  const handleRemoveCollaborator = async (collabId: string,email:string) => {
+    try {
+      const res = await axios.delete(`${COLLAB_URL}/${fileId}`,{
+        data :{
+          email: email,
+         },
+          headers: {
+            Authorization: `${session?.user?.token}`,
+          },
+        params: {
+          collabId: collabId,
+        },
+      }
+    
+    );
+      if (!res.data.success) throw new Error('Failed to remove collaborator');
+      setAlertMessage('Collaborator removed successfully');
+      setAlertType('success');
+      setShowAlert(true);
+
+      setCollaborators((prev) => prev.filter((collab) => collab.id !== collabId));
+
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.log(error.response?.data?.error);
+        setAlertMessage(error.response?.data?.error || 'An error occurred while removing the collaborator.');
+        setAlertType('error');
+        setShowAlert(true);
+      } else {
+        setAlertMessage('Error in removing collaborator');
+        setAlertType('error');
+        setShowAlert(true);
+      }
+    }
+  }
+
+  
+
+  
 
   return (
     <div className="relative z-50">
       <button
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        className="flex items-center gap-2 px-4 py-3 text-white bg-white/20 hover:bg-orange-600 transition-all duration-200 rounded-xl shadow-md"
+        className="flex items-center gap-2 px-4 py-3 lg:py-4 text-white bg-white/20 hover:bg-orange-600 transition-all duration-200 rounded-xl shadow-md"
       >
         {isMobile ? <Users size={18} /> : <LinkIcon size={20} />}
         {isMobile ? '' : 'Share'}
@@ -123,7 +176,6 @@ const ShareButton = () => {
           className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
         />
       </button>
-
       {isDropdownOpen && (
         <div className="absolute right-0 mt-2 w-[22rem] max-h-[80vh] overflow-y-auto bg-white/90 backdrop-blur-xl rounded-xl shadow-2xl border border-orange-100 p-4 space-y-4">
           <div className="flex items-center justify-between">
@@ -207,7 +259,7 @@ const ShareButton = () => {
                           <button className="p-1.5 rounded-full hover:bg-gray-200 transition">
                             <Pencil size={14} className="text-gray-600" />
                           </button>
-                          <button className="p-1.5 rounded-full hover:bg-red-100 transition ">
+                          <button className="p-1.5 rounded-full hover:bg-red-100 transition" onClick={() => handleRemoveCollaborator(collab.id,collab.user.email)}>
                             <Trash2 size={14} className="text-red-500" />
                           </button>
                         </div>
@@ -221,6 +273,13 @@ const ShareButton = () => {
         </div>
       )}
 
+      {showAlert && (
+        <AlertModal
+          message={alertMessage}
+          type={alertType}
+          onClose={() => setShowAlert(false)}
+        />
+      )}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100]">
           <div className="bg-white p-6 sm:p-8 rounded-3xl w-full max-w-md mx-4 shadow-2xl border border-gray-100 transition-all duration-300 animate-fade-in">
@@ -255,4 +314,4 @@ const ShareButton = () => {
   );
 };
 
-export default ShareButton;
+export default ShareButton

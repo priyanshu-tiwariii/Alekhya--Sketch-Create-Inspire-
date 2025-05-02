@@ -82,8 +82,14 @@ import { redis } from "../db/index";
     export const removeCollabMember = asyncHandler(async (req: any, res: any) => {
         try {
             const { fileId } = req.params;
-            const { email } = req.body;
+            const collabId  = req.query.collabId
+            const email = req.body.email
             const userId = req.user.id;
+
+            console.log("File ID:", fileId);
+            console.log("Email:", email);
+            console.log("Collab ID:", collabId);
+            console.log("User ID:", userId);
         
         //Check file exist and user is admin or not parallelly ------------------------------------------------------------------------------------------------------------------------------------------------
             const [file, isAdmin] = await Promise.all([
@@ -97,7 +103,7 @@ import { redis } from "../db/index";
             if (!isAdmin) throw new apiError(403, "User not authorized to remove collaborator");
         //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         
-        //Find the collaborator user and  check if already a collaborator----------------------------------------------------------------------------------------------------------------------------------
+        //Find the collaborator user ----------------------------------------------------------------------------------------------------------------------------------
             const collaboratorUser = await prisma.user.findUnique({
             where: { email },
             });
@@ -110,6 +116,7 @@ import { redis } from "../db/index";
                 where: {
                     fileId,
                     userId: collaboratorUser.id,
+                    id: collabId,
                 },
             });
 
