@@ -99,10 +99,20 @@ import { redis } from "../db/index";
                 }),
             ]);
         
+            console.log("File:", file);
+            console.log("Is Admin:", isAdmin);
+
             if (!file) throw new apiError(404, "File not found");
             if (!isAdmin) throw new apiError(403, "User not authorized to remove collaborator");
         //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         
+
+        //Not to delete if collabID is of admin 
+
+            if(file.id === isAdmin.fileId){
+                throw new apiError(403, "Admin cannot be removed from collaborator");
+            }
+
         //Find the collaborator user ----------------------------------------------------------------------------------------------------------------------------------
             const collaboratorUser = await prisma.user.findUnique({
             where: { email },
