@@ -109,8 +109,16 @@ import { redis } from "../db/index";
 
         //Not to delete if collabID is of admin 
 
-            if(file.id === isAdmin.fileId){
-                throw new apiError(403, "Admin cannot be removed from collaborator");
+            const collab = await prisma.collaborator.findUnique({
+                where: { id: collabId },
+            });
+        
+            if (!collab) throw new apiError(404, "Collaborator not found");
+        
+            if (collab.role === "ADMIN") {
+                return res.status(403).json(
+                    new apiResponse(null, 403, "Cannot remove admin collaborator", false)
+                );
             }
 
         //Find the collaborator user ----------------------------------------------------------------------------------------------------------------------------------
@@ -180,6 +188,19 @@ import { redis } from "../db/index";
             if (!collaboratorUser) throw new apiError(404, "User not found");
         //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         
+
+        //IF coolobarater is admin cannot change role to other than admin----------------------------------------------------------------------------------------------------------------------------------
+        const collab = await prisma.collaborator.findUnique({
+            where: { id: collabId },
+        });
+        if (!collab) throw new apiError(404, "Collaborator not found");
+
+        if(collab.role === "ADMIN" && role !== "ADMIN"){
+            return res.status(403).json(
+                new apiResponse(null, 403, "Cannot change admin collaborator role", false)
+            );
+        }
+
         // Update the collaborator role ----------------------------------------------------------------------------------------------------------------------------------
             const updatedCollab = await prisma.collaborator.updateMany({
                 where: {

@@ -31,7 +31,7 @@ const ShareButton = () => {
   const [shareLink, setShareLink] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
-
+  const [editingCollaboratorId, setEditingCollaboratorId] = useState<string | null>(null);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState<'success' | 'error'>('success');
   const [showAlert, setShowAlert] = useState(false);
@@ -159,7 +159,46 @@ const ShareButton = () => {
     }
   }
 
-  
+  const handleUpdateRole = async (collabId: string, newRole: string) => {
+    try {
+      const collaborator = collaborators.find(c => c.id === collabId);
+      if (!collaborator) throw new Error('Collaborator not found');
+
+      const res = await axios.patch(
+        `${COLLAB_URL}/${fileId}`,
+        {
+          email: collaborator.user.email,
+          role: newRole,
+        },
+        {
+          params: { collabId },
+          headers: { Authorization: `${session?.user?.token}` },
+        }
+      );
+
+      if (!res.data.success) throw new Error('Failed to update role');
+
+      // Update local state
+      setCollaborators(prev =>
+        prev.map(collab =>
+          collab.id === collabId ? { ...collab, role: newRole } : collab
+        )
+      );
+      setEditingCollaboratorId(null);
+      setAlertMessage('Role updated successfully');
+      setAlertType('success');
+      setShowAlert(true);
+    } catch (error) {
+   
+      if (axios.isAxiosError(error)) {
+        setAlertMessage(error.response?.data?.error || 'Failed to update role.');
+      } else {
+        setAlertMessage('An error occurred while updating the role.');
+      }
+      setAlertType('error');
+      setShowAlert(true);
+    }
+  };
 
   
 
@@ -194,7 +233,11 @@ const ShareButton = () => {
             </button>
           </div>
 
-          {collaborativeMode && (
+        
+            
+                    
+
+              {collaborativeMode && (
             <>
               <form onSubmit={handleInvite} className="space-y-4">
                 <div>
@@ -235,45 +278,78 @@ const ShareButton = () => {
                 </button>
               </form>
 
-              {/* Collaborators List */}
+                   
+
+
+        
               {collaborators.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <h3 className="text-sm font-semibold text-gray-800">Members</h3>
-                  <div className="divide-y divide-gray-200 max-h-40 overflow-y-auto">
-                    {collaborators.map((collab) => (
-                      <div key={collab.id} className="flex items-center justify-between py-2">
-                        <div className="flex items-center gap-3">
-                          <Image
-                            src={collab.user.profilePhoto}
-                            alt={collab.user.name}
-                            width={36}
-                            height={36}
-                            className="rounded-full object-cover"
-                          />
-                          <div>
-                            <p className="text-sm font-medium text-gray-800">{collab.user.name}</p>
-                            <p className="text-xs text-gray-500">{collab.role}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button className="p-1.5 rounded-full hover:bg-gray-200 transition">
-                            <Pencil size={14} className="text-gray-600" />
-                          </button>
-                          <button className="p-1.5 rounded-full hover:bg-red-100 transition" onClick={() => handleRemoveCollaborator(collab.id,collab.user.email)}>
-                            <Trash2 size={14} className="text-red-500" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+      <div className="mt-4 space-y-2">
+        <h3 className="text-sm font-semibold text-gray-800">Members</h3>
+        <div className="divide-y divide-gray-200 max-h-40 overflow-y-auto">
+          {collaborators.map((collab) => (
+            <div key={collab.id} className="flex items-center justify-between py-2">
+              <div className="flex items-center gap-3 flex-1">
+                <Image
+                  src={collab.user.profilePhoto}
+                  alt={collab.user.name}
+                  width={36}
+                  height={36}
+                  className="rounded-full object-cover"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-800">{collab.user.name}</p>
+                  <div className="flex items-center gap-2">
+                    {editingCollaboratorId === collab.id ? (
+                      <select
+                        value={collab.role}
+                        onChange={(e) => handleUpdateRole(collab.id, e.target.value)}
+                        className="text-xs text-gray-500 bg-white border rounded px-1 py-0.5"
+                      >
+                        {modes.map((mode) => (
+                          <option key={mode.value} value={mode.value}>
+                            {mode.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-xs text-gray-500">
+                        {modes.find(m => m.value === collab.role)?.label}
+                      </p>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setEditingCollaboratorId(
+                    editingCollaboratorId === collab.id ? null : collab.id
+                  )}
+                  className="p-1.5 rounded-full hover:bg-gray-200 transition"
+                >
+                  <Pencil size={14} className="text-gray-600" />
+                </button>
+                <button 
+                  className="p-1.5 rounded-full hover:bg-red-100 transition" 
+                  onClick={() => handleRemoveCollaborator(collab.id, collab.user.email)}
+                >
+                  <Trash2 size={14} className="text-red-500" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
             </>
           )}
-        </div>
-      )}
+       
+   
 
-      {showAlert && (
+      
+      </div>
+    )
+  }
+  {showAlert && (
         <AlertModal
           message={alertMessage}
           type={alertType}
@@ -309,9 +385,11 @@ const ShareButton = () => {
             </div>
           </div>
         </div>
-      )}
-    </div>
-  );
-};
+        )}
+  </div>
+
+  
+  )
+}
 
 export default ShareButton
