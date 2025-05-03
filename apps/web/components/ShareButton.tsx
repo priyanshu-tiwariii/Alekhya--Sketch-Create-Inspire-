@@ -246,6 +246,16 @@ const ShareButton = () => {
   };
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+const isAllowed = () => {
+  if ( collaborativeRole === 'ADMIN') {
+    return true;
+  } else if (collaborativeRole === 'USER') {
+    return false;
+  } else {
+    return false;
+  }
+}
+  const isCollaborativeModeAllowed = isAllowed();
   return (
     <div className="relative z-50">
       <button
@@ -259,9 +269,10 @@ const ShareButton = () => {
           className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
         />
       </button>
+
       {isDropdownOpen && (
         <div className="absolute right-0 mt-2 w-[22rem] max-h-[80vh] overflow-y-auto bg-white/90 backdrop-blur-xl rounded-xl shadow-2xl border border-orange-100 p-4 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className={`flex items-center justify-between ${isCollaborativeModeAllowed ? '' : 'hidden'}`}>
             <span className="text-lg font-semibold text-black/80">Collaborative Mode</span>
             <button
               onClick={handleCollaborative}
@@ -283,7 +294,7 @@ const ShareButton = () => {
 
               {isCollaborative && (
             <>
-              <form onSubmit={handleInvite} className="space-y-4">
+              <form onSubmit={handleInvite} className={` ${isCollaborativeModeAllowed ? '' : 'hidden'} space-y-4`}>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
                   <div className="relative">
@@ -322,11 +333,7 @@ const ShareButton = () => {
                 </button>
               </form>
 
-                   
-
-
-        
-              {collaborators.length > 0 && (
+        {collaborators.length > 0 && (
       <div className="mt-4 space-y-2">
         <h3 className="text-sm font-semibold text-gray-800">Members</h3>
         <div className="divide-y divide-gray-200 max-h-40 overflow-y-auto">
@@ -342,8 +349,9 @@ const ShareButton = () => {
                 />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-800">{collab.user.name}</p>
+                  <p className='text-xs font-light text-gray-600 lowercase'>{collab.role}</p>
                   <div className="flex items-center gap-2">
-                    {editingCollaboratorId === collab.id ? (
+                    {editingCollaboratorId === collab.id && (
                       <select
                         value={collab.role}
                         onChange={(e) => handleUpdateRole(collab.id, e.target.value)}
@@ -355,11 +363,7 @@ const ShareButton = () => {
                           </option>
                         ))}
                       </select>
-                    ) : (
-                      <p className="text-xs text-gray-500">
-                        {modes.find(m => m.value === collab.role)?.label}
-                      </p>
-                    )}
+                    ) }
                   </div>
                 </div>
               </div>
@@ -368,12 +372,13 @@ const ShareButton = () => {
                   onClick={() => setEditingCollaboratorId(
                     editingCollaboratorId === collab.id ? null : collab.id
                   )}
-                  className="p-1.5 rounded-full hover:bg-gray-200 transition"
+                  className={`p-1.5 rounded-full hover:bg-gray-200 transition ${isAllowed() ? '' : 'hidden'}`}
                 >
                   <Pencil size={14} className="text-gray-600" />
                 </button>
                 <button 
-                  className="p-1.5 rounded-full hover:bg-red-100 transition" 
+                  className={`p-1.5 rounded-full hover:bg-red-100 transition ${isAllowed() ? '' : 'hidden'}`}
+                  disabled={collab.user.email === session?.user?.email} 
                   onClick={() => handleRemoveCollaborator(collab.id, collab.user.email)}
                 >
                   <Trash2 size={14} className="text-red-500" />

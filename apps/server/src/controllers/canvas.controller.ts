@@ -42,6 +42,23 @@ interface Shape {
         }
         //--------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+        //Validate it that it is allowed to make changes ---------------------------------------------------------------------------------------------------------------------------------
+        const user = req.user;
+        const userId = user.id;
+
+        const isUserAllowed = await prisma.collaborator.findFirst({
+            where: {
+                userId: userId,
+                fileId: fileId,
+            },
+        });
+
+        if(isUserAllowed?.role !== "ADMIN" && isUserAllowed?.role !== "EDITOR") {
+            throw new apiError(403, "You are not allowed to make changes");
+        }
+
+
+        //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         // Insert new strokes --------------------------------------------------------------------------------------------------------------------------------------------
         const strokes = parsed.data.map((stroke) => {
             const {
@@ -144,6 +161,10 @@ interface Shape {
             if (!isFileExist) {
                 throw new apiError(404, "File not found")
             }
+
+            const user = req.user;
+            const userId = user.id;
+             
         
             const strokes = await prisma.stroke.findMany({
                 where: { fileId: fileId },

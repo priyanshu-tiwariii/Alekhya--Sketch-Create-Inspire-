@@ -50,7 +50,7 @@ export default function CanvasPage() {
   const {data :session, status}  = useSession()
 
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-  const [selectedTool, setSelectedTool] = useState<Shape["type"]>('rectangle');
+  const [selectedTool, setSelectedTool] = useState<Shape["type"]>('hand');
   const [strokeColor, setstrokeColor] = useState("#ffffff");
   const [fontSize, setFontSize] = useState("16px");
   const [fontFamily, setFontFamily] = useState('sans-serif');
