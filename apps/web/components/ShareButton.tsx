@@ -8,6 +8,10 @@ import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { AlertModal } from "./AlertModal"
+import { useSelector,useDispatch } from 'react-redux';
+import { RootState } from '../redux/store';
+import { setCollaborativeRole,setIsCollaborative} from '../redux/collaborativeSlice';
+
 interface Collaborator {
   id: string;
   fileId: string;
@@ -24,7 +28,6 @@ interface Collaborator {
 
 const ShareButton = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [collaborativeMode, setCollaborativeMode] = useState(false);
   const [email, setEmail] = useState('');
   const [selectedMode, setSelectedMode] = useState('USER');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -35,6 +38,10 @@ const ShareButton = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState<'success' | 'error'>('success');
   const [showAlert, setShowAlert] = useState(false);
+  
+  const dispatch = useDispatch();
+  const {collaborativeRole, isCollaborative} =  useSelector((state: RootState) => state.collaborative);
+
 
   const params = useParams();
   const { data: session } = useSession();
@@ -54,6 +61,12 @@ const ShareButton = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  const handleCollaborative = () => {
+    dispatch(setIsCollaborative(!isCollaborative));
+    setIsDropdownOpen(false);
+  };
+
+// Fetch collaborators when component mounts or when fileId changes ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   useEffect(() => {
     const listCollaborators = async () => {
       try {
@@ -66,10 +79,20 @@ const ShareButton = () => {
           if (!res.data.success) {
             throw new Error('Failed to fetch collaborators');
           }
-          if (res.data.data.length > 0) {
-            setCollaborativeMode(true);
+
+          const  collaborators : Collaborator[] = res.data.data;
+          if (collaborators.length > 0) {
+            dispatch(setIsCollaborative(true));
+            setCollaborators(collaborators);
           }
-          setCollaborators(res.data.data);
+         
+          else if (collaborators.length === 0) {
+            dispatch(setIsCollaborative(false));
+            setCollaborators([]);
+          }
+          const currentUSer = collaborators.find((collab)=> collab.userId === session?.user?.id);
+          dispatch(setCollaborativeRole(currentUSer?.role || 'USER'));
+        
         }
       } catch (error) {
         console.error('Error fetching collaborators:', error);
@@ -86,7 +109,9 @@ const ShareButton = () => {
     };
     listCollaborators();
   }, [fileId, session?.user?.token]);
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+// Invite collaborator ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -103,12 +128,28 @@ const ShareButton = () => {
         }
       );
       if (!res.data.success) throw new Error('Failed to send invite');
-
       setShareLink(res?.data?.data);
       setShowSuccessModal(true);
       setIsDropdownOpen(false);
       setEmail('');
       setSelectedMode('USER');
+      setAlertMessage('Invite sent successfully!');
+      setAlertType('success');
+      setShowAlert(true);
+
+     
+      const updatedCollabs = await axios.get(`${COLLAB_URL}/${fileId}`, {
+        headers: {
+          Authorization: `${session?.user?.token}`,
+        },
+      });
+
+      if (!updatedCollabs.data.success) {
+            throw new Error('Failed to fetch collaborators');
+          }
+
+      setCollaborators(updatedCollabs.data.data);
+      dispatch(setIsCollaborative(true));
     } catch (error) {
       if (axios.isAxiosError(error)) {
        setAlertMessage(error.response?.data?.error || 'An error occurred while sending the invite.');
@@ -122,7 +163,10 @@ const ShareButton = () => {
       }
     }
   };
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+
+//Remove collaborator --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   const handleRemoveCollaborator = async (collabId: string,email:string) => {
     try {
       const res = await axios.delete(`${COLLAB_URL}/${fileId}`,{
@@ -158,7 +202,9 @@ const ShareButton = () => {
       }
     }
   }
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+//Update collaborator role---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   const handleUpdateRole = async (collabId: string, newRole: string) => {
     try {
       const collaborator = collaborators.find(c => c.id === collabId);
@@ -178,7 +224,6 @@ const ShareButton = () => {
 
       if (!res.data.success) throw new Error('Failed to update role');
 
-      // Update local state
       setCollaborators(prev =>
         prev.map(collab =>
           collab.id === collabId ? { ...collab, role: newRole } : collab
@@ -199,8 +244,7 @@ const ShareButton = () => {
       setShowAlert(true);
     }
   };
-
-  
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
   return (
     <div className="relative z-50">
@@ -220,14 +264,14 @@ const ShareButton = () => {
           <div className="flex items-center justify-between">
             <span className="text-lg font-semibold text-black/80">Collaborative Mode</span>
             <button
-              onClick={() => setCollaborativeMode(!collaborativeMode)}
+              onClick={handleCollaborative}
               className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
-                collaborativeMode ? 'bg-orange-500' : 'bg-black/30'
+                isCollaborative? 'bg-orange-500' : 'bg-black/30'
               }`}
             >
               <span
                 className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transform transition-transform duration-300 ${
-                  collaborativeMode ? 'translate-x-5' : ''
+                  isCollaborative ? 'translate-x-5' : ''
                 }`}
               />
             </button>
@@ -237,7 +281,7 @@ const ShareButton = () => {
             
                     
 
-              {collaborativeMode && (
+              {isCollaborative && (
             <>
               <form onSubmit={handleInvite} className="space-y-4">
                 <div>

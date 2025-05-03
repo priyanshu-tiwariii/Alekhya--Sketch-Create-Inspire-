@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import SessionProvider from "../Providers/SessionProvider";
 import ClientWrapper from "./ClientWrapper"; 
-
+import ReduxProvider from "../Providers/ReduxProvider";
 const inter = Inter({ subsets: ["latin"] });
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 export const metadata: Metadata = {
@@ -20,9 +20,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <ReduxProvider>
         <SessionProvider>
           <ClientWrapper>{children}</ClientWrapper>
         </SessionProvider>
+        </ReduxProvider>
       </body>
     </html>
   );
