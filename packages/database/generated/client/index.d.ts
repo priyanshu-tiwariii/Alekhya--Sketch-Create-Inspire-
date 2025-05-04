@@ -2391,6 +2391,7 @@ export namespace Prisma {
     createdAt: Date | null
     createdByUserId: string | null
     name: string | null
+    collabMode: boolean | null
   }
 
   export type CreatedFileMaxAggregateOutputType = {
@@ -2398,6 +2399,7 @@ export namespace Prisma {
     createdAt: Date | null
     createdByUserId: string | null
     name: string | null
+    collabMode: boolean | null
   }
 
   export type CreatedFileCountAggregateOutputType = {
@@ -2405,6 +2407,7 @@ export namespace Prisma {
     createdAt: number
     createdByUserId: number
     name: number
+    collabMode: number
     _all: number
   }
 
@@ -2414,6 +2417,7 @@ export namespace Prisma {
     createdAt?: true
     createdByUserId?: true
     name?: true
+    collabMode?: true
   }
 
   export type CreatedFileMaxAggregateInputType = {
@@ -2421,6 +2425,7 @@ export namespace Prisma {
     createdAt?: true
     createdByUserId?: true
     name?: true
+    collabMode?: true
   }
 
   export type CreatedFileCountAggregateInputType = {
@@ -2428,6 +2433,7 @@ export namespace Prisma {
     createdAt?: true
     createdByUserId?: true
     name?: true
+    collabMode?: true
     _all?: true
   }
 
@@ -2508,6 +2514,7 @@ export namespace Prisma {
     createdAt: Date
     createdByUserId: string
     name: string
+    collabMode: boolean
     _count: CreatedFileCountAggregateOutputType | null
     _min: CreatedFileMinAggregateOutputType | null
     _max: CreatedFileMaxAggregateOutputType | null
@@ -2532,6 +2539,7 @@ export namespace Prisma {
     createdAt?: boolean
     createdByUserId?: boolean
     name?: boolean
+    collabMode?: boolean
     collaborators?: boolean | CreatedFile$collaboratorsArgs<ExtArgs>
     createdByUser?: boolean | UserDefaultArgs<ExtArgs>
     strokes?: boolean | CreatedFile$strokesArgs<ExtArgs>
@@ -2543,6 +2551,7 @@ export namespace Prisma {
     createdAt?: boolean
     createdByUserId?: boolean
     name?: boolean
+    collabMode?: boolean
     createdByUser?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["createdFile"]>
 
@@ -2551,6 +2560,7 @@ export namespace Prisma {
     createdAt?: boolean
     createdByUserId?: boolean
     name?: boolean
+    collabMode?: boolean
     createdByUser?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["createdFile"]>
 
@@ -2559,9 +2569,10 @@ export namespace Prisma {
     createdAt?: boolean
     createdByUserId?: boolean
     name?: boolean
+    collabMode?: boolean
   }
 
-  export type CreatedFileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "createdAt" | "createdByUserId" | "name", ExtArgs["result"]["createdFile"]>
+  export type CreatedFileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "createdAt" | "createdByUserId" | "name" | "collabMode", ExtArgs["result"]["createdFile"]>
   export type CreatedFileInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     collaborators?: boolean | CreatedFile$collaboratorsArgs<ExtArgs>
     createdByUser?: boolean | UserDefaultArgs<ExtArgs>
@@ -2587,6 +2598,7 @@ export namespace Prisma {
       createdAt: Date
       createdByUserId: string
       name: string
+      collabMode: boolean
     }, ExtArgs["result"]["createdFile"]>
     composites: {}
   }
@@ -3017,6 +3029,7 @@ export namespace Prisma {
     readonly createdAt: FieldRef<"CreatedFile", 'DateTime'>
     readonly createdByUserId: FieldRef<"CreatedFile", 'String'>
     readonly name: FieldRef<"CreatedFile", 'String'>
+    readonly collabMode: FieldRef<"CreatedFile", 'Boolean'>
   }
     
 
@@ -5806,7 +5819,8 @@ export namespace Prisma {
     id: 'id',
     createdAt: 'createdAt',
     createdByUserId: 'createdByUserId',
-    name: 'name'
+    name: 'name',
+    collabMode: 'collabMode'
   };
 
   export type CreatedFileScalarFieldEnum = (typeof CreatedFileScalarFieldEnum)[keyof typeof CreatedFileScalarFieldEnum]
@@ -5897,6 +5911,13 @@ export namespace Prisma {
    * Reference to a field of type 'String[]'
    */
   export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -6026,6 +6047,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"CreatedFile"> | Date | string
     createdByUserId?: StringFilter<"CreatedFile"> | string
     name?: StringFilter<"CreatedFile"> | string
+    collabMode?: BoolFilter<"CreatedFile"> | boolean
     collaborators?: CollaboratorListRelationFilter
     createdByUser?: XOR<UserScalarRelationFilter, UserWhereInput>
     strokes?: StrokeListRelationFilter
@@ -6036,6 +6058,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     createdByUserId?: SortOrder
     name?: SortOrder
+    collabMode?: SortOrder
     collaborators?: CollaboratorOrderByRelationAggregateInput
     createdByUser?: UserOrderByWithRelationInput
     strokes?: StrokeOrderByRelationAggregateInput
@@ -6049,6 +6072,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"CreatedFile"> | Date | string
     createdByUserId?: StringFilter<"CreatedFile"> | string
     name?: StringFilter<"CreatedFile"> | string
+    collabMode?: BoolFilter<"CreatedFile"> | boolean
     collaborators?: CollaboratorListRelationFilter
     createdByUser?: XOR<UserScalarRelationFilter, UserWhereInput>
     strokes?: StrokeListRelationFilter
@@ -6059,6 +6083,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     createdByUserId?: SortOrder
     name?: SortOrder
+    collabMode?: SortOrder
     _count?: CreatedFileCountOrderByAggregateInput
     _max?: CreatedFileMaxOrderByAggregateInput
     _min?: CreatedFileMinOrderByAggregateInput
@@ -6072,6 +6097,7 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"CreatedFile"> | Date | string
     createdByUserId?: StringWithAggregatesFilter<"CreatedFile"> | string
     name?: StringWithAggregatesFilter<"CreatedFile"> | string
+    collabMode?: BoolWithAggregatesFilter<"CreatedFile"> | boolean
   }
 
   export type StrokeWhereInput = {
@@ -6323,6 +6349,7 @@ export namespace Prisma {
     id?: string
     createdAt?: Date | string
     name: string
+    collabMode: boolean
     collaborators?: CollaboratorCreateNestedManyWithoutFileInput
     createdByUser: UserCreateNestedOneWithoutCreatedFilesInput
     strokes?: StrokeCreateNestedManyWithoutFileInput
@@ -6333,6 +6360,7 @@ export namespace Prisma {
     createdAt?: Date | string
     createdByUserId: string
     name: string
+    collabMode: boolean
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutFileInput
     strokes?: StrokeUncheckedCreateNestedManyWithoutFileInput
   }
@@ -6341,6 +6369,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     name?: StringFieldUpdateOperationsInput | string
+    collabMode?: BoolFieldUpdateOperationsInput | boolean
     collaborators?: CollaboratorUpdateManyWithoutFileNestedInput
     createdByUser?: UserUpdateOneRequiredWithoutCreatedFilesNestedInput
     strokes?: StrokeUpdateManyWithoutFileNestedInput
@@ -6351,6 +6380,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdByUserId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    collabMode?: BoolFieldUpdateOperationsInput | boolean
     collaborators?: CollaboratorUncheckedUpdateManyWithoutFileNestedInput
     strokes?: StrokeUncheckedUpdateManyWithoutFileNestedInput
   }
@@ -6360,12 +6390,14 @@ export namespace Prisma {
     createdAt?: Date | string
     createdByUserId: string
     name: string
+    collabMode: boolean
   }
 
   export type CreatedFileUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     name?: StringFieldUpdateOperationsInput | string
+    collabMode?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type CreatedFileUncheckedUpdateManyInput = {
@@ -6373,6 +6405,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdByUserId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    collabMode?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type StrokeCreateInput = {
@@ -6696,6 +6729,11 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type UserScalarRelationFilter = {
     is?: UserWhereInput
     isNot?: UserWhereInput
@@ -6716,6 +6754,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     createdByUserId?: SortOrder
     name?: SortOrder
+    collabMode?: SortOrder
   }
 
   export type CreatedFileMaxOrderByAggregateInput = {
@@ -6723,6 +6762,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     createdByUserId?: SortOrder
     name?: SortOrder
+    collabMode?: SortOrder
   }
 
   export type CreatedFileMinOrderByAggregateInput = {
@@ -6730,6 +6770,15 @@ export namespace Prisma {
     createdAt?: SortOrder
     createdByUserId?: SortOrder
     name?: SortOrder
+    collabMode?: SortOrder
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type FloatNullableFilter<$PrismaModel = never> = {
@@ -7031,6 +7080,10 @@ export namespace Prisma {
     connect?: StrokeWhereUniqueInput | StrokeWhereUniqueInput[]
   }
 
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
   export type CollaboratorUpdateManyWithoutFileNestedInput = {
     create?: XOR<CollaboratorCreateWithoutFileInput, CollaboratorUncheckedCreateWithoutFileInput> | CollaboratorCreateWithoutFileInput[] | CollaboratorUncheckedCreateWithoutFileInput[]
     connectOrCreate?: CollaboratorCreateOrConnectWithoutFileInput | CollaboratorCreateOrConnectWithoutFileInput[]
@@ -7266,6 +7319,19 @@ export namespace Prisma {
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
   export type NestedFloatNullableFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
     in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
@@ -7354,6 +7420,7 @@ export namespace Prisma {
     id?: string
     createdAt?: Date | string
     name: string
+    collabMode: boolean
     collaborators?: CollaboratorCreateNestedManyWithoutFileInput
     strokes?: StrokeCreateNestedManyWithoutFileInput
   }
@@ -7362,6 +7429,7 @@ export namespace Prisma {
     id?: string
     createdAt?: Date | string
     name: string
+    collabMode: boolean
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutFileInput
     strokes?: StrokeUncheckedCreateNestedManyWithoutFileInput
   }
@@ -7427,6 +7495,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"CreatedFile"> | Date | string
     createdByUserId?: StringFilter<"CreatedFile"> | string
     name?: StringFilter<"CreatedFile"> | string
+    collabMode?: BoolFilter<"CreatedFile"> | boolean
   }
 
   export type CollaboratorCreateWithoutFileInput = {
@@ -7615,6 +7684,7 @@ export namespace Prisma {
     id?: string
     createdAt?: Date | string
     name: string
+    collabMode: boolean
     collaborators?: CollaboratorCreateNestedManyWithoutFileInput
     createdByUser: UserCreateNestedOneWithoutCreatedFilesInput
   }
@@ -7624,6 +7694,7 @@ export namespace Prisma {
     createdAt?: Date | string
     createdByUserId: string
     name: string
+    collabMode: boolean
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutFileInput
   }
 
@@ -7647,6 +7718,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     name?: StringFieldUpdateOperationsInput | string
+    collabMode?: BoolFieldUpdateOperationsInput | boolean
     collaborators?: CollaboratorUpdateManyWithoutFileNestedInput
     createdByUser?: UserUpdateOneRequiredWithoutCreatedFilesNestedInput
   }
@@ -7656,6 +7728,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdByUserId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    collabMode?: BoolFieldUpdateOperationsInput | boolean
     collaborators?: CollaboratorUncheckedUpdateManyWithoutFileNestedInput
   }
 
@@ -7663,6 +7736,7 @@ export namespace Prisma {
     id?: string
     createdAt?: Date | string
     name: string
+    collabMode: boolean
     createdByUser: UserCreateNestedOneWithoutCreatedFilesInput
     strokes?: StrokeCreateNestedManyWithoutFileInput
   }
@@ -7672,6 +7746,7 @@ export namespace Prisma {
     createdAt?: Date | string
     createdByUserId: string
     name: string
+    collabMode: boolean
     strokes?: StrokeUncheckedCreateNestedManyWithoutFileInput
   }
 
@@ -7724,6 +7799,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     name?: StringFieldUpdateOperationsInput | string
+    collabMode?: BoolFieldUpdateOperationsInput | boolean
     createdByUser?: UserUpdateOneRequiredWithoutCreatedFilesNestedInput
     strokes?: StrokeUpdateManyWithoutFileNestedInput
   }
@@ -7733,6 +7809,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdByUserId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    collabMode?: BoolFieldUpdateOperationsInput | boolean
     strokes?: StrokeUncheckedUpdateManyWithoutFileNestedInput
   }
 
@@ -7782,6 +7859,7 @@ export namespace Prisma {
     id?: string
     createdAt?: Date | string
     name: string
+    collabMode: boolean
   }
 
   export type CollaboratorUpdateWithoutUserInput = {
@@ -7809,6 +7887,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     name?: StringFieldUpdateOperationsInput | string
+    collabMode?: BoolFieldUpdateOperationsInput | boolean
     collaborators?: CollaboratorUpdateManyWithoutFileNestedInput
     strokes?: StrokeUpdateManyWithoutFileNestedInput
   }
@@ -7817,6 +7896,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     name?: StringFieldUpdateOperationsInput | string
+    collabMode?: BoolFieldUpdateOperationsInput | boolean
     collaborators?: CollaboratorUncheckedUpdateManyWithoutFileNestedInput
     strokes?: StrokeUncheckedUpdateManyWithoutFileNestedInput
   }
@@ -7825,6 +7905,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     name?: StringFieldUpdateOperationsInput | string
+    collabMode?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type CollaboratorCreateManyFileInput = {

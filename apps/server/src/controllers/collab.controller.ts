@@ -25,6 +25,7 @@ import { redis } from "../db/index";
             ]);
         
             if (!file) throw new apiError(404, "File not found");
+            if(file.collabMode=== false) throw new apiError(403, "Collab mode is off, cannot add collaborator");
             if (!isAdmin) throw new apiError(403, "User not authorized to add collaborator");
         //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         
@@ -103,6 +104,7 @@ import { redis } from "../db/index";
             console.log("Is Admin:", isAdmin);
 
             if (!file) throw new apiError(404, "File not found");
+            if(file.collabMode=== false) throw new apiError(403, "Collab mode is off, cannot remove collaborator");
             if (!isAdmin) throw new apiError(403, "User not authorized to remove collaborator");
         //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         
@@ -177,6 +179,7 @@ import { redis } from "../db/index";
             ]);
         
             if (!file) throw new apiError(404, "File not found");
+            if(file.collabMode=== false) throw new apiError(403, "Collab mode is off, cannot update collaborator role");
             if (!isAdmin) throw new apiError(403, "User not authorized to update collaborator role");
         //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         
@@ -240,6 +243,12 @@ import { redis } from "../db/index";
         try {
             const { fileId } = req.params;
             const userId = req.user.id;
+            const fileData= await prisma.createdFile.findUnique({
+                where: { id: fileId },
+            });
+
+            if(fileData?.collabMode === false) throw new apiError(403, "Collab mode is off, cannot get collaborators");
+
         
         // Get all collaborators for the file ----------------------------------------------------------------------------------------------------------------------------------
             const collabs = await prisma.collaborator.findMany({

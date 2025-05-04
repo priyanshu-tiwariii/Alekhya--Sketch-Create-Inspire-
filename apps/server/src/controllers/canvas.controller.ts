@@ -5,7 +5,6 @@ import apiResponse from "../helpers/apiResponse";
 import jwt from "jsonwebtoken";
 import { schemas } from "@repo/common/schemas";
 
-
 interface Shape {
     id?: string;
     type: string;
@@ -53,10 +52,15 @@ interface Shape {
             },
         });
 
-        if(isUserAllowed?.role !== "ADMIN" && isUserAllowed?.role !== "EDITOR") {
+        if(isUserAllowed?.role !== "ADMIN" && isUserAllowed?.role !== "EDITOR" ) {
             throw new apiError(403, "You are not allowed to make changes");
         }
 
+        if(isFileExist.collabMode === false && isFileExist.createdByUserId !== userId) {
+            throw new apiError(403, "You are not allowed to make changes in this file");
+        }
+
+        
 
         //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         // Insert new strokes --------------------------------------------------------------------------------------------------------------------------------------------
@@ -160,6 +164,10 @@ interface Shape {
         
             if (!isFileExist) {
                 throw new apiError(404, "File not found")
+            }
+
+            if(isFileExist.collabMode === false && isFileExist.createdByUserId !== req.user.id) {
+                throw new apiError(403, "You are not allowed to access this file")
             }
 
             const user = req.user;

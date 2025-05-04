@@ -26,6 +26,7 @@ model CreatedFile {
   createdAt       DateTime       @default(now())
   createdByUserId String
   name            String
+  collabMode      Boolean
   collaborators   Collaborator[] @relation("Collaborators")
   createdByUser   User           @relation("CreatedFiles", fields: [createdByUserId], references: [id])
   strokes         Stroke[]       @relation("Strokes")

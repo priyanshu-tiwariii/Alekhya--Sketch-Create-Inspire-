@@ -132,7 +132,8 @@ exports.Prisma.CreatedFileScalarFieldEnum = {
   id: 'id',
   createdAt: 'createdAt',
   createdByUserId: 'createdByUserId',
-  name: 'name'
+  name: 'name',
+  collabMode: 'collabMode'
 };
 
 exports.Prisma.StrokeScalarFieldEnum = {

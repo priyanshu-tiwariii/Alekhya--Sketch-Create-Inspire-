@@ -51,6 +51,7 @@ interface User {
         data: {
           name,
           createdByUserId,
+          collabMode : false,
           collaborators: {
             create: [{ userId: createdByUserId, role: "ADMIN" }],
           },
