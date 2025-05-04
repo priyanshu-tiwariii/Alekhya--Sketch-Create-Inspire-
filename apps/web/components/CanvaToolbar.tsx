@@ -259,6 +259,23 @@ export const CanvaToolbar = ({
               <ChevronDown size={16} />
             )}
           </button>
+          {colorDropdownOpen && (
+  <div className="absolute left-0 top-12 z-50 bg-black/70 backdrop-blur-sm p-3 rounded-xl border border-white/30 shadow-lg grid grid-cols-3 gap-2 min-w-[160px]">
+    {colors.map((color) => (
+      <button
+        key={color.value}
+        onClick={() => handleColorSelect(color.value)}
+        className={`w-8 h-8 rounded-full border-2 ${
+          selectedColor === color.value
+            ? "border-orange-500 shadow-inner"
+            : "border-white/30 hover:border-white/60"
+        } transition-all`}
+        style={{ backgroundColor: color.value }}
+        title={color.name}
+      />
+    ))}
+  </div>
+)}
         </div>
       {/* ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */}
 
