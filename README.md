@@ -23,7 +23,7 @@ While most whiteboard tools are either too simple or too heavy, Chitran aims to 
 
 Chitran is **engineered as a modern monorepo using Turborepo**, separating concerns across frontend, backend APIs, WebSocket server, and shared libraries. It's designed not as a toy project, but as an **MVP-grade product** with real-world scalability.
 
-### ⚙️ Backend
+### Backend
 
 * **Express.js + Prisma + PostgreSQL** – REST API for file management, user roles, and canvas data
 * **Redis Pub/Sub** – Room-based real-time event broadcasting
