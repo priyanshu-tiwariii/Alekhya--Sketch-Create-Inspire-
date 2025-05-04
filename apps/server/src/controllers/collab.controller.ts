@@ -247,7 +247,6 @@ import { redis } from "../db/index";
                 where: { id: fileId },
             });
 
-            if(fileData?.collabMode === false) throw new apiError(403, "Collab mode is off, cannot get collaborators");
 
         
         // Get all collaborators for the file ----------------------------------------------------------------------------------------------------------------------------------

@@ -1,8 +1,10 @@
-import redis from "@repo/backend-common/redis";
+import {redisClient} from "@repo/backend-common/redis";
 import { prisma } from "@repo/db"
+import { redisPub } from "@repo/backend-common/redis";
 
 
 export {
-    redis,
-    prisma
+    redisClient as redis,
+    prisma,
+    redisPub as redisPublisher
 }
