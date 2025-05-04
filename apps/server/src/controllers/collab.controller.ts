@@ -288,19 +288,6 @@ export const isCollabarator = asyncHandler(async (req: any, res: any) => {
     try {
         const { fileId } = req.params;
         const userId = req.user.id;
-       
-        //check colloboaration mode is on or not
-        const file = await prisma.createdFile.findUnique({
-            where: { id: fileId },
-        });
-
-        if(file?.collabMode === false) {
-            return res.status(403).json(
-                new apiResponse(null, 403, "Collab mode is off", false)
-            );
-        }
-
-
         const collab = await prisma.collaborator.findFirst({
             where: {
                 fileId,

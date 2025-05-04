@@ -1,63 +1,148 @@
 import { Server, Socket } from "socket.io";
 import { redis } from "../db/index";
-import { storeUserInRedis } from "../utils/redisUtils";
-interface UserData {
-    fileId: string;
-    userId: string;
-    userName: string;
-    socketId: string;
+import { redisPub, redisSub } from "@repo/backend-common/redis";
+
+interface StrokeData {
+  fileId: string;
+  role: string;
+  action: 'create' | 'update' | 'delete';
+  stroke: any;
 }
 
-export const handleConnection = async (socket: Socket) => {
-    try {
-        console.log(` ${(socket.request as any).user.userName} connected. Socket ID -> ${socket.id}`);
+const subscribedChannels = new Set<string>();
 
-        const fileId = socket.handshake.query.fileId as string;
-        const userId = (socket.request as any).user.id;
-        const userName = (socket.request as any).user.userName;
+// Subscribe to Redis channel for file events ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    function subscribeToFileChannel(io: Server, fileId: string)
+    {
+    if (subscribedChannels.has(fileId)) return;
 
-        if (!fileId || !userId || !userName) {
-            console.error("Missing required parameters: fileId, userId, or userName");
-            socket.disconnect();
-            return;
+    redisSub.subscribe(`file:${fileId}`, (err) => {
+        if (err) {
+        console.error(`Error subscribing to file:${fileId}`, err);
+        return;
         }
+        console.log(`Subscribed to Redis channel file:${fileId}`);
+        subscribedChannels.add(fileId);
+    });
 
-        const userData: UserData = { fileId, userId, userName, socketId: socket.id };
-        await storeUserInRedis(userData);
+    redisSub.on("message", (channel, message) => {
+        try {
+        const { action, payload } = JSON.parse(message);
+        io.to(channel.replace('file:', '')).emit(action, payload);
+        } catch (error) {
+        console.error('Error processing Redis message:', error);
+        }
+    });
+    }
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-        socket.on("message", (msg) => {
-            console.log(`Message from ${socket.id}: ${msg}`);
-            socket.broadcast.to(fileId).emit("message", msg);
-        });
 
-        socket.on("disconnect", () => handleDisconnection(socket, fileId, userId));
+//Handle socket connection and events
+    export const handleConnection = async (io: Server, socket: Socket) => {
+    try {
+        const user = (socket as any).user;
+        console.log(`${user.name} connected. Socket ID: ${socket.id}`);
 
-        socket.on("error", (error) => console.error(`Socket error: ${error}`));
+        // Join file room & track active users ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+            socket.on("join-file", async (fileId: string, userId: string, role: string) => {
+            if (!fileId || userId !== user.id) {
+                console.error("Invalid join-file request");
+                return socket.disconnect(true);
+            }
+            
+
+            try {
+                await socket.join(fileId);
+                console.log(`Socket ${socket.id} joined file ${fileId}`);
+                
+                // Track active users in Redis----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                const activeUsers = await redis.hincrby(`file:${fileId}`, "activeUsers", 1);
+                subscribeToFileChannel(io, fileId);
+                
+                // Notify others about new collaborator----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                socket.to(fileId).emit('collaborator:joined', {
+                userId: user.id,
+                name: user.name,
+                role
+                });
+            } catch (error) {
+                console.error('Join-file error:', error);
+            }
+            });
+        //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+        // Handle stroke operations----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+            const handleStrokeOperation = async (
+            action: StrokeData['action'],
+            { fileId, role, stroke }: StrokeData
+            ) => {
+            if (role !== "ADMIN" && role !== "EDITOR") {
+                return socket.emit("error", { message: "Unauthorized operation" });
+            }
+
+            try {
+                const message = JSON.stringify({
+                action: `stroke:${action}`,
+                payload: { fileId, stroke }
+                });
+                
+                await redisPub.publish(`file:${fileId}`, message);
+                console.log(`Published stroke:${action} for file ${fileId}`);
+            } catch (error) {
+                console.error(`Stroke ${action} error:`, error);
+            }
+            };
+        //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+        // Socket listeners for stroke operations
+            socket.on("stroke:create", (data) => handleStrokeOperation('create', data));
+            socket.on("stroke:update", (data) => handleStrokeOperation('update', data));
+            socket.on("stroke:delete", (data) => handleStrokeOperation('delete', data));
+        //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+        // Handle disconnections----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+            socket.on("disconnecting", async () => {
+            const rooms = Array.from(socket.rooms).filter(room => room !== socket.id);
+            
+            for (const fileId of rooms) {
+                try {
+                const activeUsers = await redis.hincrby(`file:${fileId}`, "activeUsers", -1);
+                console.log(`Active users in ${fileId}: ${activeUsers}`);
+
+                // Notify others about collaborator leaving ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                    socket.to(fileId).emit('collaborator:left', {
+                        userId: user.id,
+                        name: user.name
+                    });
+                //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+                // Cleanup if no active users ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                    if (activeUsers <= 0) {
+                        await redis.expire(`file:${fileId}`, 600);
+                        console.log(`File ${fileId} will expire in 10 minutes`);
+                    }
+                //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+                } catch (error) {
+                console.error('Disconnection error:', error);
+                }
+            }
+            });
+        //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+        // Handle cursor movements ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+            socket.on('cursor:move', (position) => {
+            return socket.to(Array.from(socket.rooms) as string[]).emit('cursor:update', {
+                    userId: user.id,
+                    name: user.name,
+                    position
+                });
+            });
+        //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     } catch (err) {
-        console.error(`Error in connection handler: ${err}`);
-        socket.disconnect();
+        console.error("Connection error:", err);
+        socket.disconnect(true);
     }
-};
-
-export const handleDisconnection = async (socket: Socket, fileId: string, userId: string) => {
-    try {
-        console.log(`User disconnected: ${socket.id}`);
-        
-        await redis.hincrby(`file:${fileId}`, "activeUsers", -1);
-        await redis.hdel(`file:${fileId}:users:${userId}`, "userId", "userName", "socketId");
-
-        const activeUsers = Number(await redis.hget(`file:${fileId}`, "activeUsers") ?? 0);
-        console.log("ActiveUsers -> ",activeUsers);
-
-        if (activeUsers <= 0) {
-            await redis.expire(`file:${fileId}`, 600);
-            console.log(`File ${fileId} will be deleted from Redis after timeout.`);
-        }
-
-        console.log(`Active users in file ${fileId}: ${activeUsers}`);
-
-    } catch (err) {
-        console.error(`Error handling disconnect: ${err}`);
-    }
-};
+    };
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------

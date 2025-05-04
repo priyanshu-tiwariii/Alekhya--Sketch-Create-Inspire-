@@ -6349,7 +6349,7 @@ export namespace Prisma {
     id?: string
     createdAt?: Date | string
     name: string
-    collabMode: boolean
+    collabMode?: boolean
     collaborators?: CollaboratorCreateNestedManyWithoutFileInput
     createdByUser: UserCreateNestedOneWithoutCreatedFilesInput
     strokes?: StrokeCreateNestedManyWithoutFileInput
@@ -6360,7 +6360,7 @@ export namespace Prisma {
     createdAt?: Date | string
     createdByUserId: string
     name: string
-    collabMode: boolean
+    collabMode?: boolean
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutFileInput
     strokes?: StrokeUncheckedCreateNestedManyWithoutFileInput
   }
@@ -6390,7 +6390,7 @@ export namespace Prisma {
     createdAt?: Date | string
     createdByUserId: string
     name: string
-    collabMode: boolean
+    collabMode?: boolean
   }
 
   export type CreatedFileUpdateManyMutationInput = {
@@ -7420,7 +7420,7 @@ export namespace Prisma {
     id?: string
     createdAt?: Date | string
     name: string
-    collabMode: boolean
+    collabMode?: boolean
     collaborators?: CollaboratorCreateNestedManyWithoutFileInput
     strokes?: StrokeCreateNestedManyWithoutFileInput
   }
@@ -7429,7 +7429,7 @@ export namespace Prisma {
     id?: string
     createdAt?: Date | string
     name: string
-    collabMode: boolean
+    collabMode?: boolean
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutFileInput
     strokes?: StrokeUncheckedCreateNestedManyWithoutFileInput
   }
@@ -7684,7 +7684,7 @@ export namespace Prisma {
     id?: string
     createdAt?: Date | string
     name: string
-    collabMode: boolean
+    collabMode?: boolean
     collaborators?: CollaboratorCreateNestedManyWithoutFileInput
     createdByUser: UserCreateNestedOneWithoutCreatedFilesInput
   }
@@ -7694,7 +7694,7 @@ export namespace Prisma {
     createdAt?: Date | string
     createdByUserId: string
     name: string
-    collabMode: boolean
+    collabMode?: boolean
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutFileInput
   }
 
@@ -7736,7 +7736,7 @@ export namespace Prisma {
     id?: string
     createdAt?: Date | string
     name: string
-    collabMode: boolean
+    collabMode?: boolean
     createdByUser: UserCreateNestedOneWithoutCreatedFilesInput
     strokes?: StrokeCreateNestedManyWithoutFileInput
   }
@@ -7746,7 +7746,7 @@ export namespace Prisma {
     createdAt?: Date | string
     createdByUserId: string
     name: string
-    collabMode: boolean
+    collabMode?: boolean
     strokes?: StrokeUncheckedCreateNestedManyWithoutFileInput
   }
 
@@ -7859,7 +7859,7 @@ export namespace Prisma {
     id?: string
     createdAt?: Date | string
     name: string
-    collabMode: boolean
+    collabMode?: boolean
   }
 
   export type CollaboratorUpdateWithoutUserInput = {

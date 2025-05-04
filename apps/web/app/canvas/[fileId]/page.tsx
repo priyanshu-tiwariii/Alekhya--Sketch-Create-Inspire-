@@ -270,16 +270,24 @@ useEffect(() => {
       const collabStatusRes = await axios.get(`${COLLAB_MODE_URL}/${fileId}`, {
         headers: { Authorization: token }
       });
-
+if(collabStatusRes.status !== 200) {
+        console.error("Error fetching collaborative status:", collabStatusRes.data.message);
+        return;
+}
       const isCollabActive = collabStatusRes.data.data;
       dispatch(setIsCollaborative(isCollabActive));
 
      
+      
+     
       const collabRes = await axios.get(`${COLLAB_URL}/isCollab/${fileId}`, {
         headers: { Authorization: token }
-      });
+      });   
+      
 
       const { role, fileId: verifiedFileId } = collabRes.data.data;
+      console.log("Collab Res", collabRes.data.data);
+      console.log("Role", role);
       dispatch(setCollaborativeRole(role));
 
       if (verifiedFileId !== fileId || (!isCollabActive && role !== 'ADMIN')) {

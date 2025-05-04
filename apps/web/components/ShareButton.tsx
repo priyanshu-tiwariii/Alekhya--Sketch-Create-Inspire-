@@ -13,6 +13,7 @@ import { RootState } from '../redux/store';
 import { setCollaborativeRole,setIsCollaborative} from '../redux/collaborativeSlice';
 import { useRouter } from 'next/navigation';
 import CanvasRestricted from './CanvasRestricted';
+import { initSocket, getSocket, disconnectSocket } from '../lib/socket';
 
 interface Collaborator {
   id: string;
@@ -80,39 +81,65 @@ const ShareButton = () => {
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   
 //Handle collaborative mode toggle ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  const handleCollaborative = async () => {
-    try {
-      const res = await axios.post(`${COLLAB_MODE_URL}/${fileId}`, {
-        collabMode: !isCollaborative,
-      }, {
-        headers: {
-          Authorization: `${session?.user?.token}`,
-        },
-      });
-  
-      if (!res?.data.success) throw new Error('Failed to update collaborative mode');
-  
-     
-      dispatch(setIsCollaborative(!isCollaborative));
-  
-      setAlertMessage('Collaborative mode updated successfully!');
-      setAlertType('success');
-      setShowAlert(true);
-      setIsDropdownOpen(false);
-      setEmail('');
-      console.log(res.data.data);
-      console.log(isCollaborative)
-  
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        setAlertMessage(error.response?.data?.error || 'An error occurred while updating collaborative mode.');
-      } else {
-        setAlertMessage('Error in updating collaborative mode');
-      }
-      setAlertType('error');
-      setShowAlert(true);
+const handleCollaborative = async () => {
+  try {
+    const newCollabState = !isCollaborative;
+    const res = await axios.post(
+      `${COLLAB_MODE_URL}/${fileId}`,
+      { collabMode: newCollabState },
+      { headers: { Authorization: `${session?.user?.token}` } }
+    );
+
+    if (!res?.data.success) {
+      throw new Error(res.data.message || 'Failed to update collaborative mode');
     }
-  };
+
+    // Socket management ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   
+    if(session?.user?.token &&  res.data.success && !isCollaborative){
+      await initSocket(session?.user?.token);
+      const socket = getSocket();
+       
+    if (newCollabState) {
+      console.log('Turning collaboration mode ON');
+      if (!socket.connected) {
+        initSocket(session?.user?.token ?? undefined);
+        socket.connect();
+      }
+      socket.emit('join-file', fileId, session?.user?.id);
+    } else {
+      console.log('Turning collaboration mode OFF');
+      if (socket.connected) {
+        socket.emit('leave-file', fileId, session?.user?.id);
+       
+        socket.disconnect();
+      }
+    }
+    
+    }
+   
+   
+
+    dispatch(setIsCollaborative(newCollabState));
+
+ 
+    setAlertMessage(`Collaborative mode ${newCollabState ? 'enabled' : 'disabled'} successfully!`);
+    setAlertType('success');
+    setIsDropdownOpen(false);
+    setEmail('');
+
+  } catch (error) {
+    console.error('Collaboration toggle error:', error);
+    setAlertMessage(
+      axios.isAxiosError(error) 
+        ? error.response?.data?.error || 'Failed to update collaborative mode'
+        : 'Error in updating collaborative mode'
+    );
+    setAlertType('error');
+  } finally {
+    setShowAlert(true);
+  }
+};
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   
 
