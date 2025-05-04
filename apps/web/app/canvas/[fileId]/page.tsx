@@ -22,8 +22,14 @@ import { Loader2 } from "lucide-react";
  import { Shape } from '../../../types/shape.types';
  import { drawAllShapes } from '../../../components/CanvasTools/drawAllShapes';
 import axios from 'axios';
-import { CANVAS_URL, COLLAB_URL } from '../../../lib/apiEndPoints';
+import { CANVAS_URL, COLLAB_MODE_URL, COLLAB_URL } from '../../../lib/apiEndPoints';
 import { useRouter } from 'next/navigation';
+import { initSocket,getSocket } from '../../../lib/socket';
+import { Socket } from 'socket.io-client';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
+import { useDispatch } from 'react-redux';
+import { setCollaborativeRole, setIsCollaborative } from '../../../redux/collaborativeSlice';
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 declare module 'next-auth' {
@@ -56,7 +62,9 @@ export default function CanvasPage() {
   const [strokeColor, setstrokeColor] = useState("#ffffff");
   const [fontSize, setFontSize] = useState("16px");
   const [fontFamily, setFontFamily] = useState('sans-serif');
- 
+  const [isConnected, setIsConnected] = useState(false);
+
+  const dispatch = useDispatch();
 
   //Panning and Zooming Sate --------------------------------------------------------------------------------------------------------------------------------------------
     const [isPanning, setIsPanning] = useState(false);
@@ -74,7 +82,11 @@ export default function CanvasPage() {
     };
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
-  
+  //isAllowedToDraw  -------------------------------------------------------------------------------------------------------------------------------------------------
+    const isAllowedToDraw = () => {
+      return collaborativeRole === 'ADMIN' || collaborativeRole === 'EDITOR';
+    };
+  // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
   // Text Editing State -------------------------------------------------------------------------------------------------------------------------------------------------
     const [editingText, setEditingText] = useState<{
       id: string;
@@ -90,6 +102,7 @@ export default function CanvasPage() {
     const textInputRef = useRef<HTMLInputElement | null>(null);
     const strokeColorRef = useRef<string>(strokeColor);
     const fillColor = undefined;
+    const {collaborativeRole, isCollaborative} =  useSelector((state: RootState) => state.collaborative);
       
     // Draw all shapes on canvas -------------------------------------------------------------------------------------------------------------------------------------------------
     const handleDrawAllShapes = () => {
@@ -106,6 +119,7 @@ export default function CanvasPage() {
       }
     }
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 
   // Handle text input completion ------------ -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -253,53 +267,42 @@ useEffect(() => {
 
     try {
       
-
-      const collabRes = await axios.get(`${COLLAB_URL}/isCollab/${fileId}`, {
-        headers: {
-          Authorization: token,
-        },
+      const collabStatusRes = await axios.get(`${COLLAB_MODE_URL}/${fileId}`, {
+        headers: { Authorization: token }
       });
 
-    
-      if(collabRes.data?.data.fileId === fileId){
+      const isCollabActive = collabStatusRes.data.data;
+      dispatch(setIsCollaborative(isCollabActive));
 
+     
+      const collabRes = await axios.get(`${COLLAB_URL}/isCollab/${fileId}`, {
+        headers: { Authorization: token }
+      });
+
+      const { role, fileId: verifiedFileId } = collabRes.data.data;
+      dispatch(setCollaborativeRole(role));
+
+      if (verifiedFileId !== fileId || (!isCollabActive && role !== 'ADMIN')) {
+        router.push('/dashboard');
+        return;
+      }
 
       const canvasRes = await axios.get(`${CANVAS_URL}/${fileId}`, {
-        headers: {
-          Authorization: token,
-        },
+        headers: { Authorization: token }
       });
 
-      const strokes = canvasRes.data.data;
-      shapes.current = strokes.map((shape: Shape) => ({ ...shape }));
-
-      console.log("Loaded Shapes:", shapes.current);
-
-      added.current = [];
-      deleted.current = [];
-      updated.current = [];
-      setIsContentThere(false);
-
-
+      shapes.current = canvasRes.data.data.map((shape: Shape) => ({ ...shape }));
       handleDrawAllShapes();
-    }
-    else{
-      console.log("Not in collaboration mode");
 
-      router.push(`/dashboard`)
-
-    }
-    } catch (error: any) {
-      console.error("Error loading strokes:", error?.response?.data || error.message);
+    } catch (error) {
+      console.log("Error loading strokes:", error);
     } finally {
       setInitialLoading(false);
     }
   };
-  
 
   loadStrokes();
-}, [params.fileId, session?.user?.token]);
-
+}, [params.fileId, session?.user?.token, router, dispatch]);
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -573,9 +576,11 @@ useEffect(() => {
 
     canvas.addEventListener('wheel', handleWheel, { passive: false });
 
-    canvas.addEventListener("mousedown", handleMouseDown);
+    if(isAllowedToDraw()){
+      canvas.addEventListener("mousedown", handleMouseDown);
     canvas.addEventListener("mousemove", handleMouseMove);
     canvas.addEventListener("mouseup", handleMouseUp);
+    }
 
 
     return () => {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronDown, Check, LinkIcon, Mail, Users, Trash2, Pencil } from 'lucide-react';
 import axios from 'axios';
-import { COLLAB_URL } from '../lib/apiEndPoints';
+import { COLLAB_MODE_URL, COLLAB_URL } from '../lib/apiEndPoints';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
@@ -11,6 +11,8 @@ import { AlertModal } from "./AlertModal"
 import { useSelector,useDispatch } from 'react-redux';
 import { RootState } from '../redux/store';
 import { setCollaborativeRole,setIsCollaborative} from '../redux/collaborativeSlice';
+import { useRouter } from 'next/navigation';
+import CanvasRestricted from './CanvasRestricted';
 
 interface Collaborator {
   id: string;
@@ -38,6 +40,9 @@ const ShareButton = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState<'success' | 'error'>('success');
   const [showAlert, setShowAlert] = useState(false);
+  const [showRestricted, setShowRestricted] = useState(false);
+  const router = useRouter();
+  
   
   const dispatch = useDispatch();
   const {collaborativeRole, isCollaborative} =  useSelector((state: RootState) => state.collaborative);
@@ -61,57 +66,61 @@ const ShareButton = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const handleCollaborative = () => {
-    dispatch(setIsCollaborative(!isCollaborative));
-    setIsDropdownOpen(false);
+//Fetch collaborative mode status and collaborators list ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  const fetchCollaborators = async () => {
+    const res = await axios.get(`${COLLAB_URL}/${fileId}`, {
+      headers: { Authorization: `${session?.user?.token}` },
+    });
+    if (!res.data.success) throw new Error('Failed to fetch collaborators');
+    const collaborators: Collaborator[] = res.data.data;
+    setCollaborators(collaborators);
+    const currentUser = collaborators.find(c => c.userId === session?.user?.id);
+    dispatch(setCollaborativeRole(currentUser?.role || 'USER'));
   };
-
-// Fetch collaborators when component mounts or when fileId changes ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  useEffect(() => {
-    const listCollaborators = async () => {
-      try {
-        if (session?.user?.token !== undefined) {
-          const res = await axios.get(`${COLLAB_URL}/${fileId}`, {
-            headers: {
-              Authorization: `${session?.user?.token}`,
-            },
-          });
-          if (!res.data.success) {
-            throw new Error('Failed to fetch collaborators');
-          }
-
-          const  collaborators : Collaborator[] = res.data.data;
-          if (collaborators.length > 1) {
-            dispatch(setIsCollaborative(true));
-            setCollaborators(collaborators);
-          }
-         
-          else if (collaborators.length === 0) {
-            dispatch(setIsCollaborative(false));
-            setCollaborators([]);
-          }
-          const currentUSer = collaborators.find((collab)=> collab.userId === session?.user?.id);
-          dispatch(setCollaborativeRole(currentUSer?.role || 'USER'));
-        
-        }
-      } catch (error) {
-        console.error('Error fetching collaborators:', error);
-        if (axios.isAxiosError(error)) {
-          setAlertMessage(error.response?.data?.error || 'An error occurred while fetching collaborators.');
-          setAlertType('error');
-          setShowAlert(true);
-        } else {
-          setAlertMessage('An unexpected error occurred.');
-          setAlertType('error');
-          setShowAlert(true);
-        }
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  
+//Handle collaborative mode toggle ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  const handleCollaborative = async () => {
+    try {
+      const res = await axios.post(`${COLLAB_MODE_URL}/${fileId}`, {
+        collabMode: !isCollaborative,
+      }, {
+        headers: {
+          Authorization: `${session?.user?.token}`,
+        },
+      });
+  
+      if (!res?.data.success) throw new Error('Failed to update collaborative mode');
+  
+     
+      dispatch(setIsCollaborative(!isCollaborative));
+  
+      setAlertMessage('Collaborative mode updated successfully!');
+      setAlertType('success');
+      setShowAlert(true);
+      setIsDropdownOpen(false);
+      setEmail('');
+      console.log(res.data.data);
+      console.log(isCollaborative)
+  
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setAlertMessage(error.response?.data?.error || 'An error occurred while updating collaborative mode.');
+      } else {
+        setAlertMessage('Error in updating collaborative mode');
       }
-    };
-    listCollaborators();
-  }, [fileId, session?.user?.token]);
+      setAlertType('error');
+      setShowAlert(true);
+    }
+  };
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  
+
+// Chechk collabMode is on or not and if on then fetch collab list ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-// Invite collaborator ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Invite collaborator and fetch the list after adding collabarators ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -138,18 +147,7 @@ const ShareButton = () => {
       setShowAlert(true);
 
      
-      const updatedCollabs = await axios.get(`${COLLAB_URL}/${fileId}`, {
-        headers: {
-          Authorization: `${session?.user?.token}`,
-        },
-      });
-
-      if (!updatedCollabs.data.success) {
-            throw new Error('Failed to fetch collaborators');
-          }
-
-      setCollaborators(updatedCollabs.data.data);
-      dispatch(setIsCollaborative(true));
+      await fetchCollaborators(); 
     } catch (error) {
       if (axios.isAxiosError(error)) {
        setAlertMessage(error.response?.data?.error || 'An error occurred while sending the invite.');
@@ -246,16 +244,14 @@ const ShareButton = () => {
   };
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-const isAllowed = () => {
-  if ( collaborativeRole === 'ADMIN') {
-    return true;
-  } else if (collaborativeRole === 'USER') {
-    return false;
-  } else {
-    return false;
+//Invite is allowed only by admin---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+const isAllowed = () => collaborativeRole === 'ADMIN';
+const isCollaborativeModeAllowed = isAllowed();
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  if(collaborativeRole !== `ADMIN` && isCollaborative === false) {
+    return <CanvasRestricted message="This canvas is private right now. Collaboration mode is turned off and you're not the admin." />;
   }
-}
-  const isCollaborativeModeAllowed = isAllowed();
+  
   return (
     <div className="relative z-50">
       <button
