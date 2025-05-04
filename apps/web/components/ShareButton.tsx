@@ -81,7 +81,7 @@ const ShareButton = () => {
           }
 
           const  collaborators : Collaborator[] = res.data.data;
-          if (collaborators.length > 0) {
+          if (collaborators.length > 1) {
             dispatch(setIsCollaborative(true));
             setCollaborators(collaborators);
           }

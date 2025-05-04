@@ -22,7 +22,8 @@ import { Loader2 } from "lucide-react";
  import { Shape } from '../../../types/shape.types';
  import { drawAllShapes } from '../../../components/CanvasTools/drawAllShapes';
 import axios from 'axios';
-import { CANVAS_URL } from '../../../lib/apiEndPoints';
+import { CANVAS_URL, COLLAB_URL } from '../../../lib/apiEndPoints';
+import { useRouter } from 'next/navigation';
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 declare module 'next-auth' {
@@ -46,6 +47,7 @@ export default function CanvasPage() {
   const deleted = useRef<string[]>([]);
   const updated = useRef<Shape[]>([]);
 
+  const router = useRouter();
   const params = useParams();
   const {data :session, status}  = useSession()
 
@@ -242,43 +244,61 @@ export default function CanvasPage() {
 
 //Loading Strokes  -------------------------------------------------------------------------------------------------------------------------------------------------
 const [initialLoading, setInitialLoading] = useState(true);
-  useEffect (()=>{
-    console.log("Loading Strokes")
-    const LoadStrokes = async ()=>{
-      const fileId = params.fileId;
-      if (!fileId) return;
-      try {
-        if(session?.user?.token !== undefined){
-        const response = await axios.get(`${CANVAS_URL}/${fileId}`, {
-          headers: {
-            Authorization: `${session?.user?.token}`,
-          },
-        });
+useEffect(() => {
+  const loadStrokes = async () => {
+    const fileId = params.fileId;
+    const token = session?.user?.token;
+
+    if (!fileId || !token) return;
+
+    try {
       
-        console.log("Response",response);
-        if (response.status === 200) {
-          const strokes = response.data.data;
-          shapes.current = strokes.map((shape: Shape) => ({ ...shape }));
-          console.log("Shapes", shapes.current);
 
-          added.current = [];
-          deleted.current = [];
-          updated.current = [];
-          setIsContentThere(false);
+      const collabRes = await axios.get(`${COLLAB_URL}/isCollab/${fileId}`, {
+        headers: {
+          Authorization: token,
+        },
+      });
 
-          handleDrawAllShapes();
-        }
-      }
-      } catch (error) {
-        console.error("Error loading strokes:", error);
-      }
-      finally {
-        setInitialLoading(false);
-      }
+    
+      if(collabRes.data?.data.fileId === fileId){
+
+
+      const canvasRes = await axios.get(`${CANVAS_URL}/${fileId}`, {
+        headers: {
+          Authorization: token,
+        },
+      });
+
+      const strokes = canvasRes.data.data;
+      shapes.current = strokes.map((shape: Shape) => ({ ...shape }));
+
+      console.log("Loaded Shapes:", shapes.current);
+
+      added.current = [];
+      deleted.current = [];
+      updated.current = [];
+      setIsContentThere(false);
+
+
+      handleDrawAllShapes();
     }
+    else{
+      console.log("Not in collaboration mode");
 
-    LoadStrokes();
-  },[params.fileId, session?.user?.token]);
+      router.push(`/dashboard`)
+
+    }
+    } catch (error: any) {
+      console.error("Error loading strokes:", error?.response?.data || error.message);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+  
+
+  loadStrokes();
+}, [params.fileId, session?.user?.token]);
 
 
 

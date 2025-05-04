@@ -275,3 +275,42 @@ import { redis } from "../db/index";
     });
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+export const isCollabarator = asyncHandler(async (req: any, res: any) => { 
+
+    try {
+        const { fileId } = req.params;
+        const userId = req.user.id;
+
+        console.log("Checking collaborator status for user:", userId);
+        console.log("File ID:", fileId);
+       
+
+        const collab = await prisma.collaborator.findFirst({
+            where: {
+                fileId,
+                userId,
+            },
+        });
+
+        if (!collab) {
+            return res.status(403).json(
+                new apiResponse(null, 403, "User is not a collaborator", false)
+            );
+        }
+
+        return res.status(200).json(
+            new apiResponse(collab, 200, "User is a collaborator", true)
+        );
+
+    } catch (error) {
+        console.error("Error checking collaborator status:", error);
+        if (error instanceof apiError) {
+            throw new apiError(error.status, error.message);
+        } else if (error instanceof Error) {
+            throw new apiError(500, error.message || "Database error while checking collaborator status");
+        } else {
+            throw new apiError(500, "Unknown error occurred while checking collaborator status");
+        }
+    }
+}   
+);
