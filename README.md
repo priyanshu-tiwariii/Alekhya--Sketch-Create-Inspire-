@@ -62,6 +62,33 @@ What makes Chitran different isn't just the ability to draw - it’s the robust 
 
 ---
 
+<h2>🖼️ Preview</h2>
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="./assets/1.png" width="300px" />
+      <br />
+      <sub><b>Home Screen</b></sub>
+    </td>
+    <td align="center">
+      <img src="./assets/2.png" width="300px" />
+      <br />
+      <sub><b>Dashboard View</b></sub>
+    </td>
+    <td align="center">
+      <img src="./assets/3.png" width="300px" />
+      <br />
+      <sub><b>Canvas Editor</b></sub>
+    </td>
+  </tr>
+</table>
+
+
+
+
+---
+
 ##  Why Chitran?
 
 Most collaborative drawing tools are either too minimal or too complex. **Chitran strikes a balance**:
