@@ -479,7 +479,7 @@ useEffect(() => {
 
       console.log("ViewPortTransform", viewPortTransform);
       setLastPanPosition({ x: e.clientX, y: e.clientY });
-      handleDrawAllShapes();
+      requestAnimationFrame(handleDrawAllShapes);
       e.preventDefault();
     }
 
@@ -514,7 +514,7 @@ useEffect(() => {
         translateY: newTranslateY,
       });
 
-      handleDrawAllShapes();
+      requestAnimationFrame(handleDrawAllShapes);
     }
 
   //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -715,7 +715,7 @@ useEffect(() => {
 
       shapes.current.push(newShape);
       added.current.push(newShape);
-      handleDrawAllShapes();
+      requestAnimationFrame(handleDrawAllShapes);
       isDrawing = false;
       setIsContentThere(true);
 

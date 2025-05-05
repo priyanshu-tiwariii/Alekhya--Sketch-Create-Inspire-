@@ -193,7 +193,7 @@ export const CanvaToolbar = ({
       <div className={`fixed top-4 ${isMobile ? 'left-16' : 'left-4'} z-[10000]`}>
         <button 
           onClick={handleHome}
-          className={`px-3 sm:py-2 lg:py-3 bg-white/20 backdrop-blur-lg rounded-xl border border-white/30 shadow-xl transition-all
+          className={`p-2 lg:p-3 bg-white/20 backdrop-blur-lg rounded-xl border border-white/30 shadow-xl transition-all
           `}
         >
           <Home size={24} />

@@ -26,7 +26,7 @@ export const drawAllShapes = ({canvaRef,viewPortTransform,shapes,fillColor}:Prop
       if (!ctx) return;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+      ctx.save();
       ctx.setTransform(
         viewPortTransform.scale, 
         0, 
@@ -88,4 +88,5 @@ export const drawAllShapes = ({canvaRef,viewPortTransform,shapes,fillColor}:Prop
           });
         }
       });
+      ctx.restore();
     };
