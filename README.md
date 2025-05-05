@@ -1,104 +1,113 @@
 
 # Chitran – Sketch. Create. Inspire.
 
-**Chitran** is a full-fledged **real-time collaborative canvas application**, built for people who think visually — developers, designers, students, product teams, or anyone who solves problems with sketches.
+**Chitran** is a real-time collaborative drawing platform that allows users to draw shapes, write text, erase, undo, redo, and customize fonts and colors all on a shared canvas with full synchronization.
 
-Think **Excalidraw**, but with deeper engineering — real-time sync, role-based collaboration, modular architecture, and a backend robust enough to handle thousands of users sketching in sync.
-
----
-
-## Why Chitran?
-
-While most whiteboard tools are either too simple or too heavy, Chitran aims to **strike the perfect balance between performance, scalability, and usability**:
-
-* **Freehand drawing & shapes** – Supports live sketching, basic geometric shapes, and intelligent pointer sync.
-* **Real-time collaboration** – Multiple users can draw together, live, on the same canvas.
-* **Role-based access** – Viewers, editors, owners – all handled seamlessly.
-* **Optimistic UI & state reconciliation** – Ensures what you draw is what they see.
-* **Modular design** – Easy to maintain, scale, and extend with new features.
+What makes Chitran different isn't just the ability to draw - it’s the robust **real-time collaboration**, **role-based control**, and **scalable system architecture** built with production-level patterns and tooling.
 
 ---
 
-## Architecture & Tech Stack
+## Core Features
 
-Chitran is **engineered as a modern monorepo using Turborepo**, separating concerns across frontend, backend APIs, WebSocket server, and shared libraries. It's designed not as a toy project, but as an **MVP-grade product** with real-world scalability.
+* **Multi-Shape Drawing**: Draw rectangles, circles, arrows, and insert text with adjustable font, color, and size.
+* **Precise Erasing**: Erase individual shapes based on coordinate detection.
+* **Undo / Redo**: Powerful stack-based undo/redo system for seamless control.
+* **Live Collaboration**: Real-time drawing sync powered by a custom Redis Pub/Sub architecture.
+* **Admin Controls**:
 
-### Backend
-
-* **Express.js + Prisma + PostgreSQL** – REST API for file management, user roles, and canvas data
-* **Redis Pub/Sub** – Room-based real-time event broadcasting
-* **Socket.IO Server (Port 8080)** – Dedicated server for real-time WebSocket communication
-* **Singleton Pattern** – Connection manager for maintaining live sessions
-
-### Frontend
-
-* **Next.js (App Router)** – Frontend app hosted on port 3000
-* **React + Tailwind CSS + shadcn/ui** – Clean and modern UI/UX
-* **Canvas Engine** – Custom rendering of shapes using HTML canvas with manual event tracking
-* **React Query** – For cache-based fetching and optimistic state updates
-
-### Dev Tooling & Patterns
-
-* **Turborepo** – Managed monorepo setup for web, API, and socket server
-* **Zod + TypeScript** – End-to-end type safety and schema validation
-* **Pub/Sub Channels** – Scoped event streams per canvas
-* **Middleware Guards** – Ensuring protected routes and auth roles
+  * Grant or revoke editing rights.
+  * Toggle collaboration on/off at any time.
+* **Persistent Canvas Storage**: Each stroke and shape is stored in PostgreSQL for long-term access.
+* **Scalable State Management**: Uses Redux Toolkit and React Query to ensure minimal latency and fast updates.
+* **Turborepo Architecture**: A modular monorepo setup for optimal scalability and code sharing.
 
 ---
 
-## Collaboration Logic
+## Tech Stack
 
-* Users join a canvas room via WebSocket
-* On every stroke/action, deltas are broadcasted using Redis Pub/Sub
-* Redis isolates canvas sessions via unique channels
-* A singleton connection map tracks and emits socket events efficiently
-* Canvas state is auto-loaded from DB on entry and synced in real-time
-
----
-
-## Current Features
-
-* Drawing basic shapes and paths
-* Collaborative canvas with real-time sync
-* Canvas-level role permissions
-* File creation, saving, and history loading
-* Authentication and user sessions
-* Invite-only collaboration support
-* Responsive dashboard UI
-* Canvas persistence using PostgreSQL
+| Layer        | Tools & Libraries                                                         |
+| ------------ | ------------------------------------------------------------------------- |
+| **Frontend** | Next.js (App Router), Tailwind CSS, Shadcn UI, Redux Toolkit, React Query |
+| **Backend**  | Express.js, Socket.IO                                                     |
+| **Database** | PostgreSQL                                                                |
+| **Caching**  | Redis                                                                     |
+| **Patterns** | Singleton Pattern, Pub/Sub for real-time updates                          |
+| **Monorepo** | Turborepo (with apps + shared packages)                                   |
 
 ---
 
-## What’s Coming Next
+## Architecture Highlights
 
-* Version history & undo-redo
-* Cursor presence tracking (who's drawing where)
-* Export canvas as image/PDF
-* Auto-save with throttling
-* Canvas-level chat integration
-* Multi-tab awareness and activity indicators
+* **Zod + TypeScript** – Enforces type safety and runtime validation across services.
+* **Singleton Pattern** – Guarantees a single active WebSocket instance per session to avoid message duplication.
+* **Redis Pub/Sub** – Decouples message flow for scalable real-time collaboration on canvases.
+* **Turborepo Structure** – Separates concerns into apps (`web`, `server`, `ws-server`) and shared logic, making the project team- and microservice-ready.
+
+---
+
+## Project Structure
+
+```
+/apps
+  └── web         # Frontend with canvas UI and drawing logic
+  └── server      # Express API handling roles, DB interaction
+  └── ws-server   # WebSocket server using Socket.IO for real-time sync
+
+/packages
+  └── backend-common      # Things common in backend
+  └── database            # Prisma is initialized here
+  └── common              # Things common in whole project
+
+```
+
+---
+
+##  Why Chitran?
+
+Most collaborative drawing tools are either too minimal or too complex. **Chitran strikes a balance**:
+
+* Clean, fast UI with **modern drawing tools**
+* **Role-based access control** for security and collaboration
+* **True real-time sync** with Redis Pub/Sub
+* **Modular, maintainable codebase** built for scale and team workflows
+* Optimistic updates and **state reconciliation** to ensure a consistent experience across all users
+
+---
+
+## Roadmap
+
+* [ ] Version history with granular undo/redo
+* [ ] Real-time cursor tracking
+* [ ] Export canvas as image / PDF
+* [ ] Auto-save with intelligent throttling
+* [ ] Canvas-level chat
+* [ ] Multi-tab sync with activity indicators
 
 ---
 
 ## Live Demo
 
-> *A live preview and deployment are coming soon after performance profiling and rate-limit setup.*
+Deployment is currently being configured with rate-limiting, security headers, and performance profiling.
+-> A working video demo is available [on Youtube](#) (link to be inserted).
 
 ---
 
 ## For Contributors
 
-Chitran is not just a drawing tool — it’s a **real-world architecture playground**. Contributions are welcome across:
+Chitran isn’t just a drawing tool — it’s a **real-world system design playground**.
+Open to contributions in:
 
-* Collaborative system design
-* Canvas rendering optimizations
-* WebSocket scaling
-* UI enhancements and animations
+* WebSocket performance & scaling
+* Canvas optimizations
+* UI/UX enhancements
+* Infrastructure improvements
+* Redis or PostgreSQL query optimization
 
 ---
 
 ## Inspiration
 
-“**Chitran**” comes from the Sanskrit word *चित्रण*, meaning “drawing” or “sketching.” It's built with the vision that every great idea starts with a blank canvas.
+> The name **Chitran** comes from the Sanskrit word *चित्रण*, meaning *drawing* or *sketching*.
+> It reflects the core philosophy — that every brilliant idea starts with a blank canvas.
 
 
