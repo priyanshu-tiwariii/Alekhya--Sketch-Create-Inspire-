@@ -144,7 +144,25 @@ const handleCollaborative = async () => {
   
 
 // Chechk collabMode is on or not and if on then fetch collab list ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
- 
+ useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(`${COLLAB_MODE_URL}/${fileId}`, {
+          headers: { Authorization: `${session?.user?.token}` },
+        });
+        if (!res.data.success) throw new Error('Failed to fetch collaborative mode status');
+        const isCollabModeOn = res.data.data
+        console.log("COLLALAA", isCollabModeOn)
+        if (isCollabModeOn) {
+          await fetchCollaborators();
+        }
+      } catch (error) {
+        console.error('Error fetching collaborative mode:', error);
+      }
+    };
+    fetchData();
+  }
+, [fileId, session?.user?.token, dispatch]);
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // Invite collaborator and fetch the list after adding collabarators ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

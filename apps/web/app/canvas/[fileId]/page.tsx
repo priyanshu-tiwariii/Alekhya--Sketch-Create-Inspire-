@@ -30,6 +30,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { useDispatch } from 'react-redux';
 import { setCollaborativeRole, setIsCollaborative } from '../../../redux/collaborativeSlice';
+
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 declare module 'next-auth' {
@@ -259,6 +260,8 @@ export default function CanvasPage() {
 //Loading Strokes  -------------------------------------------------------------------------------------------------------------------------------------------------
 const [initialLoading, setInitialLoading] = useState(true);
 useEffect(() => {
+  let socketInitialized = false;
+
   const loadStrokes = async () => {
     const fileId = params.fileId;
     const token = session?.user?.token;
@@ -266,28 +269,22 @@ useEffect(() => {
     if (!fileId || !token) return;
 
     try {
-      
       const collabStatusRes = await axios.get(`${COLLAB_MODE_URL}/${fileId}`, {
-        headers: { Authorization: token }
+        headers: { Authorization: token },
       });
-if(collabStatusRes.status !== 200) {
-        console.error("Error fetching collaborative status:", collabStatusRes.data.message);
-        return;
-}
+
+      if (collabStatusRes.status !== 200) {
+        throw new Error("Failed to fetch collaboration status");
+      }
+
       const isCollabActive = collabStatusRes.data.data;
       dispatch(setIsCollaborative(isCollabActive));
 
-     
-      
-     
       const collabRes = await axios.get(`${COLLAB_URL}/isCollab/${fileId}`, {
-        headers: { Authorization: token }
-      });   
-      
+        headers: { Authorization: token },
+      });
 
       const { role, fileId: verifiedFileId } = collabRes.data.data;
-      console.log("Collab Res", collabRes.data.data);
-      console.log("Role", role);
       dispatch(setCollaborativeRole(role));
 
       if (verifiedFileId !== fileId || (!isCollabActive && role !== 'ADMIN')) {
@@ -295,21 +292,56 @@ if(collabStatusRes.status !== 200) {
         return;
       }
 
+      if (isCollabActive) {
+        try {
+          console.log("Initializing socket...");
+          const socket = initSocket(token);
+          socketInitialized = true;
+          if(!socket) {
+            console.error("Socket initialization failed. Socket is null.");
+            return;
+          }
+
+          socket.on('connect', () => {
+            console.log("Socket connected, joining file...");
+            socket.emit("join-file", verifiedFileId, session?.user?.id, role);
+          });
+
+          socket.on('connect_error', (err) => {
+            console.error("Connection error:", err.message);
+          });
+
+          if (!socket.connected) {
+            socket.connect();
+          }
+        } catch (socketError) {
+          console.error("Socket initialization failed:", socketError);
+        }
+      }
+
       const canvasRes = await axios.get(`${CANVAS_URL}/${fileId}`, {
-        headers: { Authorization: token }
+        headers: { Authorization: token },
       });
 
       shapes.current = canvasRes.data.data.map((shape: Shape) => ({ ...shape }));
       handleDrawAllShapes();
 
     } catch (error) {
-      console.log("Error loading strokes:", error);
+      console.error("Error in loadStrokes:", error);
     } finally {
       setInitialLoading(false);
     }
   };
 
   loadStrokes();
+
+  return () => {
+    if (socketInitialized) {
+      const socket = getSocket();
+      socket.off('connect');
+      socket.off('connect_error');
+    }
+  };
 }, [params.fileId, session?.user?.token, router, dispatch]);
 
 
