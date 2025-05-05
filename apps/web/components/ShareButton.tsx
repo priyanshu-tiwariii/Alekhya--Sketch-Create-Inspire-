@@ -13,7 +13,8 @@ import { RootState } from '../redux/store';
 import { setCollaborativeRole,setIsCollaborative} from '../redux/collaborativeSlice';
 import { useRouter } from 'next/navigation';
 import CanvasRestricted from './CanvasRestricted';
-import { initSocket, getSocket, disconnectSocket } from '../lib/socket';
+import { SingletonSocket } from '../lib/socket';
+
 
 interface Collaborator {
   id: string;
@@ -97,23 +98,18 @@ const handleCollaborative = async () => {
     // Socket management ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
    
     if(session?.user?.token &&  res.data.success && !isCollaborative){
-      await initSocket(session?.user?.token);
-      const socket = getSocket();
+  
+     
+      const socket = SingletonSocket.getInstance(session?.user?.token);
        
-    if (newCollabState) {
+    if (newCollabState && socket) {
       console.log('Turning collaboration mode ON');
       if (!socket.connected) {
-        initSocket(session?.user?.token ?? undefined);
         socket.connect();
       }
       socket.emit('join-file', fileId, session?.user?.id);
     } else {
       console.log('Turning collaboration mode OFF');
-      if (socket.connected) {
-        socket.emit('leave-file', fileId, session?.user?.id);
-       
-        socket.disconnect();
-      }
     }
     
     }

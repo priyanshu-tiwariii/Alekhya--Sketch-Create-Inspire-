@@ -24,12 +24,12 @@ import { Loader2 } from "lucide-react";
 import axios from 'axios';
 import { CANVAS_URL, COLLAB_MODE_URL, COLLAB_URL } from '../../../lib/apiEndPoints';
 import { useRouter } from 'next/navigation';
-import { initSocket,getSocket } from '../../../lib/socket';
-import { Socket } from 'socket.io-client';
+import {  SingletonSocket } from '../../../lib/socket';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { useDispatch } from 'react-redux';
 import { setCollaborativeRole, setIsCollaborative } from '../../../redux/collaborativeSlice';
+
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -81,6 +81,7 @@ export default function CanvasPage() {
         y: (y - viewPortTransform.translateY) / viewPortTransform.scale
       };
     };
+    const [socketInitialized, setSocketInitialized] = useState(false);
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
   //isAllowedToDraw  -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -156,6 +157,30 @@ export default function CanvasPage() {
       shapes.current.push(newTextShape);
       added.current.push(newTextShape);
       handleDrawAllShapes();
+      if (!socketInitialized && session?.user?.token) {
+        const socket = SingletonSocket.getInstance(session.user.token);
+        if (!socket) {
+          console.error("Socket initialization failed. Socket is null.");
+          return;
+        }
+
+        socket.on('connect', () => {
+          console.log("Socket connected, joining file...");
+          socket.emit("join-file", params.fileId, session.user.id, collaborativeRole);
+          setSocketInitialized(true);
+        });
+      }
+
+      if (socketInitialized && session?.user?.token) {
+        console.log("Emitting stroke:create event", newTextShape);
+        const socket = SingletonSocket.getInstance(session?.user?.token);
+        socket?.emit('stroke:create', {
+          fileId: params.fileId,
+          role: collaborativeRole,
+          stroke: newTextShape 
+        });
+      }
+
       setEditingText(null);
     };
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -257,10 +282,10 @@ export default function CanvasPage() {
 
 //------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
-//Loading Strokes  -------------------------------------------------------------------------------------------------------------------------------------------------
+//Loading Strokes and connecting to sockteIO  -------------------------------------------------------------------------------------------------------------------------------------------------
 const [initialLoading, setInitialLoading] = useState(true);
 useEffect(() => {
-  let socketInitialized = false;
+  
 
   const loadStrokes = async () => {
     const fileId = params.fileId;
@@ -295,8 +320,8 @@ useEffect(() => {
       if (isCollabActive) {
         try {
           console.log("Initializing socket...");
-          const socket = initSocket(token);
-          socketInitialized = true;
+          const socket = SingletonSocket.getInstance(token)
+          
           if(!socket) {
             console.error("Socket initialization failed. Socket is null.");
             return;
@@ -305,6 +330,7 @@ useEffect(() => {
           socket.on('connect', () => {
             console.log("Socket connected, joining file...");
             socket.emit("join-file", verifiedFileId, session?.user?.id, role);
+            setSocketInitialized(true);
           });
 
           socket.on('connect_error', (err) => {
@@ -324,7 +350,11 @@ useEffect(() => {
       });
 
       shapes.current = canvasRes.data.data.map((shape: Shape) => ({ ...shape }));
-      handleDrawAllShapes();
+    
+      setTimeout(() => {
+        handleDrawAllShapes();
+        console.log("Initial shapes drawn");
+      }, 100);
 
     } catch (error) {
       console.error("Error in loadStrokes:", error);
@@ -334,18 +364,87 @@ useEffect(() => {
   };
 
   loadStrokes();
-
-  return () => {
-    if (socketInitialized) {
-      const socket = getSocket();
-      socket.off('connect');
-      socket.off('connect_error');
-    }
-  };
+ 
+  
 }, [params.fileId, session?.user?.token, router, dispatch]);
 
-
 // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+
+//Socket Initialization for getting data -------------------------------------------------------------------------------------------------------------------------------------------------
+  useEffect(() => {
+    const initializeSocket = async () => {
+      try {
+        if (!session?.user?.token) return;
+        const socket = await SingletonSocket.getInstance(session?.user?.token);
+        if (!socket) return;
+
+      
+        const handleConnect = () => {
+          console.log("Socket connected");
+          socket.emit("join-file", params.fileId, session.user.id, collaborativeRole);
+        };
+
+       
+        const handleStrokeCreate = (payload: { stroke: Shape }) => {
+          console.log("RAW INCOMING:", payload);
+          const receivedStroke = payload.stroke;
+          
+          if (!shapes.current.some(s => s.id === receivedStroke.id)) {
+            console.log("ADDING NEW STROKE:", receivedStroke);
+            shapes.current.push(receivedStroke);
+            handleDrawAllShapes();
+          }
+        };
+
+        const handleDeleteStroke = (payload:{stroke: string})=>{
+          const {stroke} = payload;
+          console.log("DELETING STROKE:", stroke);
+          const deleteShape = shapes.current.find((shape) => shape.id === stroke);
+          if (deleteShape) {
+            tempShapes.current.push(deleteShape);
+            shapes.current = shapes.current.filter((shape) => shape.id !== stroke);
+            const addedIndex = added.current.findIndex((shape) => shape.id === stroke);
+            if (addedIndex !== -1) {
+              added.current.splice(addedIndex, 1);
+            } else {
+              deleted.current.push(stroke);
+            }
+            handleDrawAllShapes();
+          }
+        }  
+       
+        socket.off("connect", handleConnect);
+        socket.off("stroke:create", handleStrokeCreate);
+        socket.off("stroke:delete", handleDeleteStroke);
+
+     
+        socket.on("connect", handleConnect);
+        socket.on("stroke:create", handleStrokeCreate);
+        socket.on("stroke:delete", handleDeleteStroke);
+
+        if (socket.connected) {
+          handleConnect();
+        }
+
+      } catch (error) {
+        console.error("Socket error:", error);
+      }
+    };
+
+    initializeSocket();
+    
+
+    
+  }, [params.fileId, session?.user?.token, collaborativeRole]);
+//------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+// Handle drawing all shapes when initial loading is done -------------------------------------------------------------------------------------------------------------------------------------------------
+    useEffect(() => {
+      if (!initialLoading) {
+        handleDrawAllShapes();
+      }
+    }, [initialLoading]);
+  
+//------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 
   useEffect(() => {
   // Resize canvas to fit window  -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -453,7 +552,17 @@ useEffect(() => {
           else {
             deleted.current.push(shapeToDelete.id);
           }
+
+          if(socketInitialized && session?.user?.token) {
+            const socket = SingletonSocket.getInstance(session?.user?.token);
+            socket?.emit('stroke:delete', {
+              fileId: params.fileId,
+              role: collaborativeRole,
+              stroke: shapeToDelete.id 
+            });
+          }
           handleDrawAllShapes();
+         
         }
         isDrawing = false;
         setIsContentThere(true);
@@ -576,7 +685,7 @@ useEffect(() => {
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
     
   // Handle up event for mouse ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
-    const handleMouseUp = (e: MouseEvent) => {
+    const handleMouseUp = async (e: MouseEvent) => {
       if (!isDrawing) return;
       if (selectedTool === 'text' || selectedTool === 'eraser') return;
 
@@ -601,11 +710,42 @@ useEffect(() => {
       if(newShape) {
         tempShapes.current = [];
       }
+
+      
+
       shapes.current.push(newShape);
       added.current.push(newShape);
       handleDrawAllShapes();
       isDrawing = false;
       setIsContentThere(true);
+
+      if (!socketInitialized && session?.user?.token) {
+        const socket = await SingletonSocket.getInstance(session.user.token);
+        if (!socket) {
+          console.error("Socket initialization failed. Socket is null.");
+          return;
+        }
+    
+        socket.on('connect', () => {
+          console.log("Socket connected, joining file...");
+          socket.emit("join-file", params.fileId, session.user.id, collaborativeRole);
+          setSocketInitialized(true);
+        });
+    
+        socket.on('connect_error', (err) => {
+          console.error("Connection error:", err.message);
+        });
+      }
+    
+      if (socketInitialized && session?.user?.token ) {
+        console.log("Emitting stroke:create event", newShape);
+        const socket = await SingletonSocket.getInstance(session?.user?.token);
+        socket?.emit('stroke:create', {
+          fileId: params.fileId,
+          role: collaborativeRole,
+          stroke: newShape 
+        });
+      }
     };
   // ------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -28,6 +28,7 @@ const subscribedChannels = new Set<string>();
     redisSub.on("message", (channel, message) => {
         try {
         const { action, payload } = JSON.parse(message);
+        console.log(`Received message on channel ${channel}:`, action, payload);
         io.to(channel.replace('file:', '')).emit(action, payload);
         } catch (error) {
         console.error('Error processing Redis message:', error);
@@ -83,8 +84,10 @@ const subscribedChannels = new Set<string>();
             try {
                 const message = JSON.stringify({
                 action: `stroke:${action}`,
-                payload: { fileId, stroke }
+                payload: {stroke }
                 });
+                console.log(`Publishing stroke:${action} for file ${fileId}`);
+                
                 
                 await redisPub.publish(`file:${fileId}`, message);
                 console.log(`Published stroke:${action} for file ${fileId}`);
@@ -92,16 +95,39 @@ const subscribedChannels = new Set<string>();
                 console.error(`Stroke ${action} error:`, error);
             }
             };
+
+            const handleStrokeDelete = async(
+                action: 'delete', { fileId, role, stroke }: StrokeData) => {
+                if (role !== "ADMIN" && role !== "EDITOR") {
+                    return socket.emit("error", { message: "Unauthorized operation" });
+                }
+                try {
+                    const message = JSON.stringify({
+                    action: `stroke:${action}`,
+                    payload: { stroke }
+                    });
+                    console.log(`Publishing stroke:${action} for file ${fileId}`);
+                    
+                    
+                    await redisPub.publish(`file:${fileId}`, message);
+                    console.log(`Published stroke:${action} for file ${fileId}`);
+                    
+                } catch (error) {
+                    console.error(`Stroke ${action} error:`, error);
+                }
+            };
+
+   
         //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
         // Socket listeners for stroke operations
             socket.on("stroke:create", (data) => handleStrokeOperation('create', data));
             socket.on("stroke:update", (data) => handleStrokeOperation('update', data));
-            socket.on("stroke:delete", (data) => handleStrokeOperation('delete', data));
+            socket.on("stroke:delete", (data) => handleStrokeDelete('delete', data));
         //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
         // Handle disconnections----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-            socket.on("disconnecting", async () => {
+            socket.on("disconnect", async () => {
             const rooms = Array.from(socket.rooms).filter(room => room !== socket.id);
             
             for (const fileId of rooms) {

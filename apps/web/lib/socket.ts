@@ -1,41 +1,59 @@
-// lib/socket.ts
 import { io, Socket } from "socket.io-client";
 
-let socket: Socket | null = null;
+// let socket: Socket | null = null;
 
-export const initSocket = (token?: string): Socket | null => {
-  if (socket && socket.connected) {
-    return socket;
-  }
-
+// export const initSocket = (token?: string): Socket | null => {
  
 
-  
-  socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8080", {
-    withCredentials: true,
-    autoConnect: false,
-    auth: token ? { token: `${token}` } : undefined,
-    transports: ["websocket", "polling"],
-  });
+//   if (socket && socket.connected) {
+//     return socket;
+//   }  
+//   socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8080", {
+//     withCredentials: true,
+//     autoConnect: false,
+//     auth: token ? { token: `${token}` } : undefined,
+//     transports: ["websocket", "polling"],
+//   });
 
 
-  socket.on("connect_error", (err) => {
-    console.error("Socket connection error:", err);
-  });
+//   socket.on("connect_error", (err) => {
+//     console.error("Socket connection error:", err);
+//   });
 
-  return socket;
-};
+//   return socket;
+// };
+// lib/socket.ts
 
-export const getSocket = (): Socket => {
-  if (!socket) {
-    throw new Error("Socket not initialized. Call initSocket first.");
+export class SingletonSocket {
+  private static instance: Socket | null = null;
+
+  // Prevent direct instantiation
+  private constructor() {}
+
+  public static getInstance(token?: string): Socket | null {
+    if (!SingletonSocket.instance) {
+      SingletonSocket.instance = io(
+        process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8080",
+        {
+          withCredentials: true,
+          autoConnect: false,
+          auth: token ? { token: `${token}` } : undefined,
+          transports: ["websocket", "polling"],
+        }
+      );
+
+      SingletonSocket.instance.on("connect_error", (err) => {
+        console.error("Socket connection error:", err);
+      });
+    }
+
+    return SingletonSocket.instance;
   }
-  return socket;
-};
 
-export const disconnectSocket = () => {
-  if (socket) {
-    socket.disconnect();
-    socket = null;
+  public static disconnect() {
+    if (SingletonSocket.instance) {
+      SingletonSocket.instance.disconnect();
+      SingletonSocket.instance = null;
+    }
   }
-};
+}
