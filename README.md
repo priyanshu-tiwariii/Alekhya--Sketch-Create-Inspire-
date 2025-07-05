@@ -115,7 +115,7 @@ Most collaborative drawing tools are either too minimal or too complex. **Chitra
 ## Live Demo
 
 Deployment is currently being configured with rate-limiting, security headers, and performance profiling.
--> A working video demo is available [on Youtube](#) (link to be inserted).
+-> A working video demo is available [on Youtube](https://youtu.be/vRV5SdqgUFw)
 
 ---
 
